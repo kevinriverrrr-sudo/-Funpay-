@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const fontSelect = document.getElementById('font-select');
   const fontSizeInput = document.getElementById('font-size');
   const fontSizeValue = document.getElementById('font-size-value');
+  const lotUtilitiesEnabled = document.getElementById('lot-utilities-enabled');
+  const quickTradePanelEnabled = document.getElementById('quick-trade-panel-enabled');
   const coverUpload = document.getElementById('cover-upload');
   const coverPreview = document.getElementById('cover-preview');
   const coverPreviewImg = document.getElementById('cover-preview-img');
@@ -53,6 +55,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       customTheme: currentSettings.customTheme || null,
       font: fontSelect.value,
       fontSize: fontSizeInput.value,
+      lotUtilitiesEnabled: lotUtilitiesEnabled.checked,
+      quickTradePanelEnabled: quickTradePanelEnabled.checked,
+      pinnedLots: currentSettings.pinnedLots || [],
       coverImage: currentSettings.coverImage || null,
       coverPosition: coverPosition.value,
       coverSize: coverSize.value
@@ -85,6 +90,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         customTheme: null,
         font: 'default',
         fontSize: '14',
+        lotUtilitiesEnabled: false,
+        quickTradePanelEnabled: false,
+        pinnedLots: [],
         coverImage: null,
         coverPosition: 'center',
         coverSize: 'cover'
@@ -112,6 +120,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       customTheme: null,
       font: 'default',
       fontSize: '14',
+      lotUtilitiesEnabled: false,
+      quickTradePanelEnabled: false,
+      pinnedLots: [],
       coverImage: null,
       coverPosition: 'center',
       coverSize: 'cover'
@@ -123,6 +134,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     fontSelect.value = settings.font;
     fontSizeInput.value = settings.fontSize;
     fontSizeValue.textContent = settings.fontSize;
+    lotUtilitiesEnabled.checked = settings.lotUtilitiesEnabled;
+    quickTradePanelEnabled.checked = settings.quickTradePanelEnabled;
     coverPosition.value = settings.coverPosition;
     coverSize.value = settings.coverSize;
 

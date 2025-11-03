@@ -9,7 +9,10 @@ chrome.runtime.onInstalled.addListener((details) => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      lotUtilitiesEnabled: false,
+      quickTradePanelEnabled: false,
+      pinnedLots: []
     });
     
     chrome.tabs.create({
