@@ -21,6 +21,7 @@
         <button class="tab-btn active" data-tab="themes">Темы</button>
         <button class="tab-btn" data-tab="fonts">Шрифты</button>
         <button class="tab-btn" data-tab="covers">Обложки</button>
+        <button class="tab-btn" data-tab="visual">Визуальные эффекты</button>
         <button class="tab-btn" data-tab="custom">Своя тема</button>
       </div>
 
@@ -162,6 +163,103 @@
               <option value="auto">Оригинальный размер</option>
               <option value="100% 100%">Растянуть</option>
             </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="visual-tab">
+        <h2>Визуальные эффекты</h2>
+        <p class="description">Включите дополнительные визуальные эффекты для улучшения внешнего вида сайта</p>
+        
+        <div class="settings-grid">
+          <div class="setting-card full-width">
+            <div class="effect-toggle">
+              <div class="effect-info">
+                <h3>❄️ Снежный след курсора</h3>
+                <p class="effect-description">Добавляет падающие снежинки, следующие за курсором мыши. Использует оптимизированную canvas-анимацию с GPU ускорением.</p>
+                <p class="effect-note">⚠️ Может влиять на производительность на слабых устройствах</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="snow-trail-enabled">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-card full-width">
+            <div class="effect-toggle">
+              <div class="effect-info">
+                <h3>🎨 Анимированный логотип FunPay</h3>
+                <p class="effect-description">Заменяет стандартный логотип FunPay в шапке сайта на анимированную версию с вращающимися элементами и пульсацией.</p>
+                <p class="effect-note">ℹ️ Включает кнопки паузы для остановки анимации</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="animated-logo-enabled">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-card full-width">
+            <div class="effect-toggle">
+              <div class="effect-info">
+                <h3>🖱️ Пользовательский курсор</h3>
+                <p class="effect-description">Изменяет стандартный курсор мыши на выбранный стиль или загруженное изображение.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="custom-cursor-enabled">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-card" id="cursor-settings" style="display: none;">
+            <label for="cursor-type">Тип курсора:</label>
+            <select id="cursor-type" class="input-field">
+              <option value="default">По умолчанию</option>
+              <option value="pointer">Указатель</option>
+              <option value="neonPointer">Неоновый указатель</option>
+              <option value="arrow">Стрелка</option>
+              <option value="target">Прицел</option>
+              <option value="gaming">Игровой</option>
+              <option value="custom">Загрузить свой</option>
+            </select>
+          </div>
+
+          <div class="setting-card full-width" id="cursor-upload-settings" style="display: none;">
+            <label for="cursor-upload" class="upload-label">
+              <span class="upload-icon">🖼️</span>
+              <span>Загрузить изображение курсора</span>
+              <span class="upload-hint">PNG или GIF, до 1 МБ, рекомендуемый размер: 32x32px</span>
+            </label>
+            <input type="file" id="cursor-upload" accept="image/png,image/gif" style="display: none;">
+            
+            <div id="cursor-preview-container" style="display: none; margin-top: 10px;">
+              <p>Предпросмотр курсора:</p>
+              <div id="cursor-preview-area" style="width: 100px; height: 100px; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #f5f5f5;">
+                <span id="cursor-preview-text">Наведите мышь</span>
+              </div>
+              <button id="remove-cursor" class="btn btn-secondary" style="margin-top: 10px;">✕ Удалить курсор</button>
+            </div>
+          </div>
+
+          <div class="setting-card full-width performance-info">
+            <h3>⚡ Информация о производительности</h3>
+            <ul>
+              <li><strong>Снежный след:</strong> Использует requestAnimationFrame и throttling для оптимизации. Ограничено 50 частицами одновременно.</li>
+              <li><strong>Анимированный логотип:</strong> Использует SVG-анимации с аппаратным ускорением. Минимальное влияние на производительность.</li>
+              <li><strong>Пользовательский курсор:</strong> Применяется через CSS. Не влияет на производительность.</li>
+            </ul>
+            <p class="effect-note">💡 Совет: Отключите эффекты, если заметите снижение производительности</p>
+          </div>
+
+          <div class="setting-card full-width compatibility-info">
+            <h3>🌐 Совместимость</h3>
+            <ul>
+              <li><strong>Chrome/Edge/Brave:</strong> Все эффекты поддерживаются полностью</li>
+              <li><strong>Firefox:</strong> Все эффекты поддерживаются, возможны незначительные отличия в анимациях</li>
+              <li><strong>Safari:</strong> Не тестировалось (расширение не поддерживает Safari)</li>
+            </ul>
           </div>
         </div>
       </div>
