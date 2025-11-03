@@ -1,160 +1,275 @@
+let currentSettings = {};
+
 document.addEventListener('DOMContentLoaded', async () => {
-  const themeSelect = document.getElementById('theme-select');
-  const fontSelect = document.getElementById('font-select');
-  const fontSizeInput = document.getElementById('font-size');
-  const fontSizeValue = document.getElementById('font-size-value');
-  const coverUpload = document.getElementById('cover-upload');
-  const coverPreview = document.getElementById('cover-preview');
-  const coverPreviewImg = document.getElementById('cover-preview-img');
-  const removeCoverBtn = document.getElementById('remove-cover');
-  const coverPosition = document.getElementById('cover-position');
-  const coverSize = document.getElementById('cover-size');
+  await initializeDashboard();
+});
+
+async function initializeDashboard() {
+  showLoading(true);
+  
+  try {
+    currentSettings = await StorageHelper.getSettings();
+    populateDashboard();
+    setupEventListeners();
+    updateStats();
+  } catch (error) {
+    console.error('Error initializing dashboard:', error);
+    showError(true);
+  } finally {
+    showLoading(false);
+  }
+}
+
+function populateDashboard() {
+  const quickTogglesContainer = document.getElementById('quick-toggles');
+  quickTogglesContainer.innerHTML = '';
+  
+  const toggles = [
+    {
+      icon: '📊',
+      label: 'Аналитика',
+      description: 'Оверлей аналитики рынка',
+      checked: currentSettings.marketAnalytics?.analyticsOverlay || false,
+      onChange: (checked) => updateToggle('marketAnalytics', 'analyticsOverlay', checked)
+    },
+    {
+      icon: '📦',
+      label: 'Инструменты лотов',
+      description: 'Дополнительные функции управления',
+      checked: currentSettings.lots?.lotTools || false,
+      onChange: (checked) => updateToggle('lots', 'lotTools', checked)
+    },
+    {
+      icon: '🤖',
+      label: 'Автоответчик',
+      description: 'Автоматические ответы',
+      checked: currentSettings.automation?.autoresponder || false,
+      onChange: (checked) => updateToggle('automation', 'autoresponder', checked)
+    },
+    {
+      icon: '✨',
+      label: 'Визуальные эффекты',
+      description: 'Дополнительные эффекты',
+      checked: currentSettings.visual?.visualEffects || false,
+      onChange: (checked) => updateToggle('visual', 'visualEffects', checked)
+    }
+  ];
+  
+  toggles.forEach(toggle => {
+    const toggleElement = createQuickToggle(toggle);
+    quickTogglesContainer.appendChild(toggleElement);
+  });
+  
+  const themeSelect = document.getElementById('quick-theme');
+  if (currentSettings.customization?.theme) {
+    themeSelect.value = currentSettings.customization.theme;
+  }
+}
+
+function createQuickToggle(config) {
+  const container = document.createElement('label');
+  container.className = 'quick-toggle';
+  
+  const info = document.createElement('div');
+  info.className = 'quick-toggle-info';
+  
+  const icon = document.createElement('div');
+  icon.className = 'quick-toggle-icon';
+  icon.textContent = config.icon;
+  
+  const text = document.createElement('div');
+  text.className = 'quick-toggle-text';
+  
+  const label = document.createElement('div');
+  label.className = 'quick-toggle-label';
+  label.textContent = config.label;
+  
+  const desc = document.createElement('div');
+  desc.className = 'quick-toggle-desc';
+  desc.textContent = config.description;
+  
+  text.appendChild(label);
+  text.appendChild(desc);
+  
+  info.appendChild(icon);
+  info.appendChild(text);
+  
+  const switchContainer = document.createElement('div');
+  switchContainer.className = 'quick-toggle-switch';
+  
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.className = 'quick-toggle-input';
+  input.checked = config.checked;
+  
+  input.addEventListener('change', (e) => {
+    if (config.onChange) {
+      config.onChange(e.target.checked);
+    }
+  });
+  
+  const slider = document.createElement('span');
+  slider.className = 'quick-toggle-slider';
+  
+  switchContainer.appendChild(input);
+  switchContainer.appendChild(slider);
+  
+  container.appendChild(info);
+  container.appendChild(switchContainer);
+  
+  return container;
+}
+
+function setupEventListeners() {
+  const themeSelect = document.getElementById('quick-theme');
+  themeSelect.addEventListener('change', (e) => {
+    if (!currentSettings.customization) {
+      currentSettings.customization = {};
+    }
+    currentSettings.customization.theme = e.target.value;
+    updateStats();
+  });
+  
   const applyBtn = document.getElementById('apply-btn');
-  const resetBtn = document.getElementById('reset-btn');
-  const optionsBtn = document.getElementById('options-btn');
+  applyBtn.addEventListener('click', applySettings);
+  
+  const advancedBtn = document.getElementById('advanced-btn');
+  advancedBtn.addEventListener('click', openAdvancedSettings);
+}
 
-  let currentSettings = {};
+function updateToggle(section, key, value) {
+  if (!currentSettings[section]) {
+    currentSettings[section] = {};
+  }
+  currentSettings[section][key] = value;
+  updateStats();
+}
 
-  await loadSettings();
-
-  fontSizeInput.addEventListener('input', (e) => {
-    fontSizeValue.textContent = e.target.value;
-  });
-
-  coverUpload.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Размер файла не должен превышать 5 МБ');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const imageData = event.target.result;
-        coverPreviewImg.src = imageData;
-        coverPreview.style.display = 'block';
-        currentSettings.coverImage = imageData;
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-
-  removeCoverBtn.addEventListener('click', () => {
-    coverPreview.style.display = 'none';
-    coverPreviewImg.src = '';
-    currentSettings.coverImage = null;
-    coverUpload.value = '';
-  });
-
-  applyBtn.addEventListener('click', async () => {
-    const settings = {
-      theme: themeSelect.value,
-      customTheme: currentSettings.customTheme || null,
-      font: fontSelect.value,
-      fontSize: fontSizeInput.value,
-      coverImage: currentSettings.coverImage || null,
-      coverPosition: coverPosition.value,
-      coverSize: coverSize.value
-    };
-
-    await chrome.storage.sync.set(settings);
-
-    chrome.runtime.sendMessage({
-      action: 'applyToAllTabs',
-      settings: settings
-    });
-
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && (tab.url.includes('funpay.com'))) {
-      chrome.tabs.sendMessage(tab.id, {
-        action: 'updateSettings',
-        settings: settings
-      }).catch(() => {
-        chrome.tabs.reload(tab.id);
-      });
-    }
-
-    showNotification('✓ Настройки применены!');
-  });
-
-  resetBtn.addEventListener('click', async () => {
-    if (confirm('Вы уверены, что хотите сбросить все настройки?')) {
-      const defaultSettings = {
-        theme: 'default',
-        customTheme: null,
-        font: 'default',
-        fontSize: '14',
-        coverImage: null,
-        coverPosition: 'center',
-        coverSize: 'cover'
-      };
-
-      await chrome.storage.sync.set(defaultSettings);
-
+async function applySettings() {
+  const applyBtn = document.getElementById('apply-btn');
+  const originalText = applyBtn.innerHTML;
+  
+  applyBtn.innerHTML = '<span class="btn-icon">⏳</span><span>Применение...</span>';
+  applyBtn.disabled = true;
+  
+  try {
+    const result = await StorageHelper.saveAllSettings(currentSettings);
+    
+    if (result.success) {
       chrome.runtime.sendMessage({
         action: 'applyToAllTabs',
-        settings: defaultSettings
+        settings: currentSettings
       });
+      
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.url && tab.url.includes('funpay.com')) {
+        try {
+          await chrome.tabs.sendMessage(tab.id, {
+            action: 'updateSettings',
+            settings: currentSettings
+          });
+        } catch (err) {
+          console.log('Tab reload may be needed');
+        }
+      }
+      
+      showNotification('✓ Настройки применены!', 'success');
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Error applying settings:', error);
+    showNotification('✕ Ошибка применения настроек', 'error');
+  } finally {
+    applyBtn.innerHTML = originalText;
+    applyBtn.disabled = false;
+  }
+}
 
-      await loadSettings();
-      showNotification('⟲ Настройки сброшены!');
+function openAdvancedSettings() {
+  chrome.runtime.openOptionsPage();
+}
+
+function updateStats() {
+  let activeFeatures = 0;
+  
+  const sections = ['marketAnalytics', 'lots', 'automation', 'chat', 'translation', 'visual', 'utilities', 'accounts'];
+  
+  sections.forEach(section => {
+    if (currentSettings[section]) {
+      Object.values(currentSettings[section]).forEach(value => {
+        if (typeof value === 'boolean' && value === true) {
+          activeFeatures++;
+        }
+      });
     }
   });
-
-  optionsBtn.addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
-  });
-
-  async function loadSettings() {
-    const settings = await chrome.storage.sync.get({
-      theme: 'default',
-      customTheme: null,
-      font: 'default',
-      fontSize: '14',
-      coverImage: null,
-      coverPosition: 'center',
-      coverSize: 'cover'
-    });
-
-    currentSettings = settings;
-
-    themeSelect.value = settings.theme;
-    fontSelect.value = settings.font;
-    fontSizeInput.value = settings.fontSize;
-    fontSizeValue.textContent = settings.fontSize;
-    coverPosition.value = settings.coverPosition;
-    coverSize.value = settings.coverSize;
-
-    if (settings.coverImage) {
-      coverPreviewImg.src = settings.coverImage;
-      coverPreview.style.display = 'block';
-    }
+  
+  const activeFeaturesEl = document.getElementById('active-features');
+  if (activeFeaturesEl) {
+    activeFeaturesEl.textContent = activeFeatures;
   }
-
-  function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 6px;
-      font-weight: 600;
-      z-index: 10000;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      animation: slideIn 0.3s ease;
-    `;
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.style.animation = 'slideOut 0.3s ease';
-      setTimeout(() => notification.remove(), 300);
-    }, 2000);
+  
+  const currentThemeEl = document.getElementById('current-theme');
+  if (currentThemeEl && currentSettings.customization?.theme) {
+    const themeNames = {
+      default: 'Default',
+      dark: 'Тёмная',
+      light: 'Светлая',
+      blue: 'Синяя',
+      purple: 'Фиолетовая'
+    };
+    currentThemeEl.textContent = themeNames[currentSettings.customization.theme] || 'Default';
   }
-});
+}
+
+function showLoading(show) {
+  const loadingState = document.getElementById('loading-state');
+  const dashboardContent = document.getElementById('dashboard-content');
+  
+  if (show) {
+    loadingState.classList.remove('hidden');
+    dashboardContent.style.display = 'none';
+  } else {
+    loadingState.classList.add('hidden');
+    dashboardContent.style.display = 'block';
+  }
+}
+
+function showError(show) {
+  const errorState = document.getElementById('error-state');
+  const dashboardContent = document.getElementById('dashboard-content');
+  
+  if (show) {
+    errorState.classList.remove('hidden');
+    dashboardContent.style.display = 'none';
+  } else {
+    errorState.classList.add('hidden');
+    dashboardContent.style.display = 'block';
+  }
+}
+
+function showNotification(message, type = 'success') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  
+  const icon = document.createElement('span');
+  icon.className = 'notification-icon';
+  icon.textContent = type === 'success' ? '✓' : '✕';
+  
+  const text = document.createElement('span');
+  text.className = 'notification-text';
+  text.textContent = message;
+  
+  notification.appendChild(icon);
+  notification.appendChild(text);
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => notification.classList.add('show'), 10);
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 2500);
+}
