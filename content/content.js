@@ -21,7 +21,10 @@ class FunPayCustomizer {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      lotUtilitiesEnabled: false,
+      quickTradePanelEnabled: false,
+      pinnedLots: []
     });
 
     this.applySettings(settings);
@@ -404,6 +407,14 @@ class FunPayCustomizer {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.action === 'updateSettings') {
         this.applySettings(request.settings);
+        
+        if (window.FunPayLotUtilities) {
+          window.FunPayLotUtilities.destroy();
+          if (request.settings.lotUtilitiesEnabled) {
+            window.FunPayLotUtilities = new LotUtilities();
+          }
+        }
+        
         sendResponse({ success: true });
       }
     });

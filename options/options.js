@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveAll = document.getElementById('save-all');
   const resetAll = document.getElementById('reset-all');
 
+  const lotUtilitiesEnabledOptions = document.getElementById('lot-utilities-enabled-options');
+  const quickTradePanelEnabledOptions = document.getElementById('quick-trade-panel-enabled-options');
+
   let currentSettings = {};
 
   await loadSettings();
@@ -135,6 +138,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       customTheme: currentSettings.customTheme || null,
       font: currentSettings.font,
       fontSize: currentSettings.fontSize,
+      lotUtilitiesEnabled: lotUtilitiesEnabledOptions.checked,
+      quickTradePanelEnabled: quickTradePanelEnabledOptions.checked,
+      pinnedLots: currentSettings.pinnedLots || [],
       coverImage: currentSettings.coverImage || null,
       coverPosition: currentSettings.coverPosition,
       coverSize: currentSettings.coverSize
@@ -157,6 +163,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         customTheme: null,
         font: 'default',
         fontSize: '14',
+        lotUtilitiesEnabled: false,
+        quickTradePanelEnabled: false,
+        pinnedLots: [],
         coverImage: null,
         coverPosition: 'center',
         coverSize: 'cover'
@@ -180,6 +189,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       customTheme: null,
       font: 'default',
       fontSize: '14',
+      lotUtilitiesEnabled: false,
+      quickTradePanelEnabled: false,
+      pinnedLots: [],
       coverImage: null,
       coverPosition: 'center',
       coverSize: 'cover'
@@ -196,6 +208,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     fontFamily.value = settings.font;
     fontSizeOptions.value = settings.fontSize;
     fontSizeDisplay.textContent = settings.fontSize;
+    lotUtilitiesEnabledOptions.checked = settings.lotUtilitiesEnabled;
+    quickTradePanelEnabledOptions.checked = settings.quickTradePanelEnabled;
     coverPositionOptions.value = settings.coverPosition;
     coverSizeOptions.value = settings.coverSize;
 

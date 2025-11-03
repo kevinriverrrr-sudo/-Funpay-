@@ -22,6 +22,7 @@
         <button class="tab-btn" data-tab="fonts">Шрифты</button>
         <button class="tab-btn" data-tab="covers">Обложки</button>
         <button class="tab-btn" data-tab="custom">Своя тема</button>
+        <button class="tab-btn" data-tab="utilities">Утилиты лотов</button>
       </div>
 
       <div class="tab-content active" id="themes-tab">
@@ -229,6 +230,82 @@
         </div>
       </div>
 
+      <div class="tab-content" id="utilities-tab">
+        <h2>Утилиты для управления лотами</h2>
+        <p class="description">Инструменты для управления лотами на FunPay: дублирование, закрепление, массовые действия и быстрая панель инструментов</p>
+        
+        <div class="settings-grid">
+          <div class="setting-card full-width">
+            <label class="checkbox-label-options">
+              <input type="checkbox" id="lot-utilities-enabled-options">
+              <span>Включить утилиты лотов</span>
+            </label>
+            <p class="setting-hint">Активирует все инструменты управления лотами на страницах FunPay</p>
+          </div>
+
+          <div class="setting-card full-width">
+            <label class="checkbox-label-options">
+              <input type="checkbox" id="quick-trade-panel-enabled-options">
+              <span>Показать панель быстрых действий</span>
+            </label>
+            <p class="setting-hint">Отображает плавающую панель с быстрым доступом ко всем утилитам</p>
+          </div>
+
+          <div class="setting-card full-width">
+            <h3 style="margin-bottom: 12px; font-size: 16px;">Доступные функции:</h3>
+            <div class="features-list">
+              <div class="feature-item">
+                <span class="feature-icon">📌</span>
+                <div>
+                  <strong>Закрепление лотов</strong>
+                  <p>Закрепляйте важные лоты вверху списка. Работает на стороне клиента.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <span class="feature-icon">📋</span>
+                <div>
+                  <strong>Дублирование лотов</strong>
+                  <p>Быстро создавайте копии существующих лотов для редактирования.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <span class="feature-icon">⏸️</span>
+                <div>
+                  <strong>Массовое отключение</strong>
+                  <p>Отключайте или включайте сразу несколько лотов одним кликом.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <span class="feature-icon">⚠️</span>
+                <div>
+                  <strong>Быстрая жалоба</strong>
+                  <p>Мгновенно открывайте форму жалобы для нужного лота.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <span class="feature-icon">📦</span>
+                <div>
+                  <strong>Счётчик товаров</strong>
+                  <p>Отслеживайте общее количество лотов в реальном времени.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-card full-width">
+            <div class="info-box">
+              <strong>ℹ️ Важная информация:</strong>
+              <ul style="margin: 8px 0 0 20px; line-height: 1.6;">
+                <li>Утилиты безопасно обрабатывают изменения DOM</li>
+                <li>Закреплённые лоты сохраняются между сеансами</li>
+                <li>Все действия требуют подтверждения перед выполнением</li>
+                <li>Функции работают только на стороне браузера</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="action-buttons">
         <button id="save-all" class="btn btn-primary btn-large">✓ Сохранить и применить</button>
         <button id="reset-all" class="btn btn-secondary btn-large">⟲ Сбросить всё</button>
@@ -236,7 +313,7 @@
     </main>
 
     <footer class="footer">
-      <p>© 2024 FunPay Customizer | Версия 1.0.0 | Создано @MarkusGarantor</p>
+      <p>© 2024 FunPay Customizer | Версия 1.1.0 | Создано @MarkusGarantor</p>
     </footer>
   </div>
 
