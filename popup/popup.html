@@ -84,6 +84,26 @@
         </div>
       </section>
       
+      <section class="settings-section">
+        <h2>Экспорт лотов</h2>
+        
+        <div class="setting-group">
+          <label for="export-format">Формат экспорта:</label>
+          <select id="export-format" class="setting-input">
+            <option value="json">JSON (структурированный)</option>
+            <option value="txt">TXT (текстовый)</option>
+          </select>
+        </div>
+        
+        <button id="export-lots-btn" class="btn btn-primary" style="width: 100%;">
+          📥 Экспортировать лоты
+        </button>
+        
+        <p style="font-size: 11px; color: #999; margin-top: 8px; text-align: center;">
+          Откройте страницу с лотами для экспорта
+        </p>
+      </section>
+      
       <div class="button-group">
         <button id="apply-btn" class="btn btn-primary">✓ Применить</button>
         <button id="reset-btn" class="btn btn-secondary">⟲ Сбросить</button>
