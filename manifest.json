@@ -3,6 +3,7 @@
   "name": "FunPay Customizer",
   "version": "1.0.0",
   "description": "Расширение для кастомизации внешнего вида сайта FunPay.com",
+  "author": "@MarkusGarantor",
   "permissions": [
     "storage",
     "activeTab"

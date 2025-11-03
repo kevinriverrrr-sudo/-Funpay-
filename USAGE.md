@@ -272,4 +272,10 @@
 
 ---
 
+## 👤 Автор
+
+Создано [@MarkusGarantor](https://github.com/MarkusGarantor)
+
+---
+
 **Приятного использования FunPay Customizer!** 🎉
