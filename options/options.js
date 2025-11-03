@@ -29,6 +29,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveAll = document.getElementById('save-all');
   const resetAll = document.getElementById('reset-all');
 
+  const snowTrailEnabled = document.getElementById('snow-trail-enabled');
+  const animatedLogoEnabled = document.getElementById('animated-logo-enabled');
+  const customCursorEnabled = document.getElementById('custom-cursor-enabled');
+  const cursorType = document.getElementById('cursor-type');
+  const cursorUpload = document.getElementById('cursor-upload');
+  const cursorSettings = document.getElementById('cursor-settings');
+  const cursorUploadSettings = document.getElementById('cursor-upload-settings');
+  const cursorPreviewContainer = document.getElementById('cursor-preview-container');
+  const cursorPreviewArea = document.getElementById('cursor-preview-area');
+  const removeCursorBtn = document.getElementById('remove-cursor');
+
   let currentSettings = {};
 
   await loadSettings();
@@ -109,6 +120,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     input.addEventListener('input', updateCustomThemePreview);
   });
 
+  snowTrailEnabled.addEventListener('change', () => {
+    currentSettings.snowTrailEnabled = snowTrailEnabled.checked;
+  });
+
+  animatedLogoEnabled.addEventListener('change', () => {
+    currentSettings.animatedLogoEnabled = animatedLogoEnabled.checked;
+  });
+
+  customCursorEnabled.addEventListener('change', () => {
+    currentSettings.customCursorEnabled = customCursorEnabled.checked;
+    cursorSettings.style.display = customCursorEnabled.checked ? 'block' : 'none';
+    if (!customCursorEnabled.checked) {
+      cursorUploadSettings.style.display = 'none';
+    }
+  });
+
+  cursorType.addEventListener('change', () => {
+    currentSettings.customCursorType = cursorType.value;
+    cursorUploadSettings.style.display = cursorType.value === 'custom' ? 'block' : 'none';
+    
+    if (cursorType.value !== 'custom') {
+      cursorPreviewArea.style.cursor = getCursorValue(cursorType.value);
+    }
+  });
+
+  cursorUpload.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 1 * 1024 * 1024) {
+        showNotification('❌ Размер файла не должен превышать 1 МБ', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageData = event.target.result;
+        currentSettings.customCursorImage = imageData;
+        cursorPreviewContainer.style.display = 'block';
+        cursorPreviewArea.style.cursor = `url("${imageData}") 16 16, auto`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  removeCursorBtn.addEventListener('click', () => {
+    currentSettings.customCursorImage = null;
+    cursorUpload.value = '';
+    cursorPreviewContainer.style.display = 'none';
+    cursorPreviewArea.style.cursor = 'default';
+  });
+
   saveCustomTheme.addEventListener('click', () => {
     const customTheme = {
       bgPrimary: bgPrimary.value,
@@ -137,7 +199,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: currentSettings.fontSize,
       coverImage: currentSettings.coverImage || null,
       coverPosition: currentSettings.coverPosition,
-      coverSize: currentSettings.coverSize
+      coverSize: currentSettings.coverSize,
+      snowTrailEnabled: currentSettings.snowTrailEnabled || false,
+      animatedLogoEnabled: currentSettings.animatedLogoEnabled || false,
+      customCursorEnabled: currentSettings.customCursorEnabled || false,
+      customCursorType: currentSettings.customCursorType || 'default',
+      customCursorImage: currentSettings.customCursorImage || null
     };
 
     await chrome.storage.sync.set(settings);
@@ -159,7 +226,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         fontSize: '14',
         coverImage: null,
         coverPosition: 'center',
-        coverSize: 'cover'
+        coverSize: 'cover',
+        snowTrailEnabled: false,
+        animatedLogoEnabled: false,
+        customCursorEnabled: false,
+        customCursorType: 'default',
+        customCursorImage: null
       };
 
       await chrome.storage.sync.set(defaultSettings);
@@ -182,7 +254,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      snowTrailEnabled: false,
+      animatedLogoEnabled: false,
+      customCursorEnabled: false,
+      customCursorType: 'default',
+      customCursorImage: null
     });
 
     currentSettings = settings;
@@ -216,7 +293,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateCustomThemePreview();
     }
 
+    snowTrailEnabled.checked = settings.snowTrailEnabled || false;
+    animatedLogoEnabled.checked = settings.animatedLogoEnabled || false;
+    customCursorEnabled.checked = settings.customCursorEnabled || false;
+    cursorType.value = settings.customCursorType || 'default';
+
+    cursorSettings.style.display = settings.customCursorEnabled ? 'block' : 'none';
+    cursorUploadSettings.style.display = (settings.customCursorEnabled && settings.customCursorType === 'custom') ? 'block' : 'none';
+
+    if (settings.customCursorImage) {
+      cursorPreviewContainer.style.display = 'block';
+      cursorPreviewArea.style.cursor = `url("${settings.customCursorImage}") 16 16, auto`;
+    }
+
     updateFontPreview();
+  }
+
+  function getCursorValue(cursorType) {
+    const presetCursors = {
+      default: 'default',
+      pointer: 'pointer',
+      neonPointer: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'10\' fill=\'%23667eea\' opacity=\'0.5\'/%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'5\' fill=\'%23764ba2\'/%3E%3C/svg%3E") 16 16, auto',
+      arrow: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\'%3E%3Cpath d=\'M2 2 L2 20 L8 14 L12 22 L14 21 L10 13 L18 13 Z\' fill=\'%23ffffff\' stroke=\'%23000000\' stroke-width=\'1\'/%3E%3C/svg%3E") 2 2, auto',
+      target: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'12\' fill=\'none\' stroke=\'%23ff0000\' stroke-width=\'2\'/%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'6\' fill=\'none\' stroke=\'%23ff0000\' stroke-width=\'2\'/%3E%3Cline x1=\'16\' y1=\'4\' x2=\'16\' y2=\'10\' stroke=\'%23ff0000\' stroke-width=\'2\'/%3E%3Cline x1=\'16\' y1=\'22\' x2=\'16\' y2=\'28\' stroke=\'%23ff0000\' stroke-width=\'2\'/%3E%3Cline x1=\'4\' y1=\'16\' x2=\'10\' y2=\'16\' stroke=\'%23ff0000\' stroke-width=\'2\'/%3E%3Cline x1=\'22\' y1=\'16\' x2=\'28\' y2=\'16\' stroke=\'%23ff0000\' stroke-width=\'2\'/%3E%3C/svg%3E") 16 16, auto',
+      gaming: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\'%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'14\' fill=\'%2300ff00\' opacity=\'0.3\'/%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'8\' fill=\'%2300ff00\'/%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'2\' fill=\'%23000000\'/%3E%3C/svg%3E") 16 16, auto'
+    };
+    
+    return presetCursors[cursorType] || 'default';
   }
 
   function updateFontPreview() {

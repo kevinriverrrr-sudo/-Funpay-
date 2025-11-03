@@ -5,12 +5,30 @@ class FunPayCustomizer {
     this.styleElement = null;
     this.fontLinkElement = null;
     this.coverElement = null;
+    this.snowTrail = null;
+    this.animatedLogo = null;
+    this.customCursor = null;
     this.init();
   }
 
   async init() {
     await this.loadSettings();
     this.setupMessageListener();
+    this.initVisualEffects();
+  }
+
+  initVisualEffects() {
+    if (typeof SnowTrailEffect !== 'undefined') {
+      this.snowTrail = new SnowTrailEffect();
+    }
+    
+    if (typeof AnimatedLogoEffect !== 'undefined') {
+      this.animatedLogo = new AnimatedLogoEffect();
+    }
+    
+    if (typeof CustomCursorEffect !== 'undefined') {
+      this.customCursor = new CustomCursorEffect();
+    }
   }
 
   async loadSettings() {
@@ -21,7 +39,12 @@ class FunPayCustomizer {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      snowTrailEnabled: false,
+      animatedLogoEnabled: false,
+      customCursorEnabled: false,
+      customCursorType: 'default',
+      customCursorImage: null
     });
 
     this.applySettings(settings);
@@ -31,6 +54,37 @@ class FunPayCustomizer {
     this.applyTheme(settings.theme, settings.customTheme);
     this.applyFont(settings.font, settings.fontSize);
     this.applyCover(settings.coverImage, settings.coverPosition, settings.coverSize);
+    this.applyVisualEffects(settings);
+  }
+
+  applyVisualEffects(settings) {
+    if (this.snowTrail) {
+      if (settings.snowTrailEnabled) {
+        this.snowTrail.enable();
+      } else {
+        this.snowTrail.disable();
+      }
+    }
+
+    if (this.animatedLogo) {
+      if (settings.animatedLogoEnabled) {
+        setTimeout(() => this.animatedLogo.enable(), 500);
+      } else {
+        this.animatedLogo.disable();
+      }
+    }
+
+    if (this.customCursor) {
+      if (settings.customCursorEnabled) {
+        this.customCursor.setCursor(
+          settings.customCursorType || 'default',
+          settings.customCursorImage
+        );
+        this.customCursor.enable();
+      } else {
+        this.customCursor.disable();
+      }
+    }
   }
 
   applyTheme(themeName, customTheme) {

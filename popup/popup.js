@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const removeCoverBtn = document.getElementById('remove-cover');
   const coverPosition = document.getElementById('cover-position');
   const coverSize = document.getElementById('cover-size');
+  const snowTrailToggle = document.getElementById('snow-trail-toggle');
+  const animatedLogoToggle = document.getElementById('animated-logo-toggle');
+  const customCursorToggle = document.getElementById('custom-cursor-toggle');
   const applyBtn = document.getElementById('apply-btn');
   const resetBtn = document.getElementById('reset-btn');
   const optionsBtn = document.getElementById('options-btn');
@@ -55,7 +58,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: fontSizeInput.value,
       coverImage: currentSettings.coverImage || null,
       coverPosition: coverPosition.value,
-      coverSize: coverSize.value
+      coverSize: coverSize.value,
+      snowTrailEnabled: snowTrailToggle.checked,
+      animatedLogoEnabled: animatedLogoToggle.checked,
+      customCursorEnabled: customCursorToggle.checked,
+      customCursorType: currentSettings.customCursorType || 'default',
+      customCursorImage: currentSettings.customCursorImage || null
     };
 
     await chrome.storage.sync.set(settings);
@@ -87,7 +95,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         fontSize: '14',
         coverImage: null,
         coverPosition: 'center',
-        coverSize: 'cover'
+        coverSize: 'cover',
+        snowTrailEnabled: false,
+        animatedLogoEnabled: false,
+        customCursorEnabled: false,
+        customCursorType: 'default',
+        customCursorImage: null
       };
 
       await chrome.storage.sync.set(defaultSettings);
@@ -114,7 +127,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      snowTrailEnabled: false,
+      animatedLogoEnabled: false,
+      customCursorEnabled: false,
+      customCursorType: 'default',
+      customCursorImage: null
     });
 
     currentSettings = settings;
@@ -125,6 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     fontSizeValue.textContent = settings.fontSize;
     coverPosition.value = settings.coverPosition;
     coverSize.value = settings.coverSize;
+    snowTrailToggle.checked = settings.snowTrailEnabled || false;
+    animatedLogoToggle.checked = settings.animatedLogoEnabled || false;
+    customCursorToggle.checked = settings.customCursorEnabled || false;
 
     if (settings.coverImage) {
       coverPreviewImg.src = settings.coverImage;

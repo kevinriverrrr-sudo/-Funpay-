@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FunPay Customizer",
-  "version": "1.0.0",
-  "description": "Расширение для кастомизации внешнего вида сайта FunPay.com",
+  "version": "1.1.0",
+  "description": "Расширение для кастомизации внешнего вида сайта FunPay.com с визуальными эффектами",
   "author": "@MarkusGarantor",
   "permissions": [
     "storage",
@@ -36,7 +36,12 @@
         "https://funpay.com/*",
         "https://*.funpay.com/*"
       ],
-      "js": ["content/content.js"],
+      "js": [
+        "content/snow-trail.js",
+        "content/animated-logo.js",
+        "content/custom-cursor.js",
+        "content/content.js"
+      ],
       "css": ["content/inject.css"],
       "run_at": "document_start"
     }
