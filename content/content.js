@@ -405,8 +405,69 @@ class FunPayCustomizer {
       if (request.action === 'updateSettings') {
         this.applySettings(request.settings);
         sendResponse({ success: true });
+      } else if (request.action === 'sendAutoMessage') {
+        this.sendAutoMessage(request.contactId, request.content);
+        sendResponse({ success: true });
+      } else if (request.action === 'getReviews') {
+        const reviews = this.getReviews();
+        sendResponse({ success: true, reviews });
       }
+      return true;
     });
+  }
+
+  sendAutoMessage(contactId, content) {
+    try {
+      const messageInput = document.querySelector('textarea[name="message"], textarea.chat-input, #message');
+      const sendButton = document.querySelector('button[type="submit"].chat-send, .send-message-btn');
+
+      if (messageInput && sendButton) {
+        messageInput.value = content;
+        messageInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        setTimeout(() => {
+          sendButton.click();
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error sending auto message:', error);
+    }
+  }
+
+  getReviews() {
+    const reviews = [];
+    
+    try {
+      const reviewElements = document.querySelectorAll('.review-item, [class*="review"], .feedback-item');
+      
+      reviewElements.forEach((element, index) => {
+        const ratingElement = element.querySelector('[class*="rating"], .stars, [class*="star"]');
+        const textElement = element.querySelector('.review-text, .feedback-text, [class*="text"]');
+        const authorElement = element.querySelector('.review-author, .username, [class*="author"]');
+        const timeElement = element.querySelector('.review-time, .timestamp, time');
+        
+        let rating = 5;
+        if (ratingElement) {
+          const ratingText = ratingElement.textContent || ratingElement.getAttribute('data-rating');
+          const ratingMatch = ratingText.match(/(\d+)/);
+          if (ratingMatch) {
+            rating = parseInt(ratingMatch[1]);
+          }
+        }
+
+        reviews.push({
+          id: `review_${index}_${Date.now()}`,
+          author: authorElement ? authorElement.textContent.trim() : 'Unknown',
+          text: textElement ? textElement.textContent.trim() : '',
+          rating: rating,
+          timestamp: timeElement ? timeElement.textContent.trim() : new Date().toISOString()
+        });
+      });
+    } catch (error) {
+      console.error('Error getting reviews:', error);
+    }
+    
+    return reviews;
   }
 }
 

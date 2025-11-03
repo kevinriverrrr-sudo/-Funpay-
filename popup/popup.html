@@ -84,6 +84,27 @@
         </div>
       </section>
       
+      <section class="settings-section automation-summary" id="automation-section">
+        <h2>🤖 Автоматизация</h2>
+        
+        <div class="automation-stats">
+          <div class="stat-item">
+            <span class="stat-label">Статус:</span>
+            <span id="automation-status" class="stat-value">Выключено</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Отправлено сегодня:</span>
+            <span id="messages-today" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Ожидает отправки:</span>
+            <span id="pending-count" class="stat-value">0</span>
+          </div>
+        </div>
+        
+        <div id="pending-messages-list" style="display: none;"></div>
+      </section>
+      
       <div class="button-group">
         <button id="apply-btn" class="btn btn-primary">✓ Применить</button>
         <button id="reset-btn" class="btn btn-secondary">⟲ Сбросить</button>
