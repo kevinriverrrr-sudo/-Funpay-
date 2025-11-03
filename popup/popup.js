@@ -12,10 +12,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const applyBtn = document.getElementById('apply-btn');
   const resetBtn = document.getElementById('reset-btn');
   const optionsBtn = document.getElementById('options-btn');
+  const highlightToggle = document.getElementById('highlight-toggle');
 
   let currentSettings = {};
 
   await loadSettings();
+
+  highlightToggle.addEventListener('change', async () => {
+    if (currentSettings.chatTools) {
+      currentSettings.chatTools.highlightEnabled = highlightToggle.checked;
+      
+      await chrome.storage.sync.set({
+        chatTools: currentSettings.chatTools
+      });
+
+      chrome.runtime.sendMessage({
+        action: 'applyToAllTabs',
+        settings: currentSettings
+      });
+
+      showNotification(highlightToggle.checked ? '✓ Подсветка включена' : '✓ Подсветка выключена');
+    }
+  });
 
   fontSizeInput.addEventListener('input', (e) => {
     fontSizeValue.textContent = e.target.value;
@@ -114,7 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      chatTools: {
+        highlightEnabled: true,
+        notificationsEnabled: true,
+        soundEnabled: false,
+        keywords: []
+      }
     });
 
     currentSettings = settings;
@@ -129,6 +153,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settings.coverImage) {
       coverPreviewImg.src = settings.coverImage;
       coverPreview.style.display = 'block';
+    }
+
+    if (settings.chatTools) {
+      highlightToggle.checked = settings.chatTools.highlightEnabled;
     }
   }
 

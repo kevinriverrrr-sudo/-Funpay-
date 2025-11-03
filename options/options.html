@@ -22,6 +22,7 @@
         <button class="tab-btn" data-tab="fonts">Шрифты</button>
         <button class="tab-btn" data-tab="covers">Обложки</button>
         <button class="tab-btn" data-tab="custom">Своя тема</button>
+        <button class="tab-btn" data-tab="chat">Чат инструменты</button>
       </div>
 
       <div class="tab-content active" id="themes-tab">
@@ -225,6 +226,86 @@
                 <a href="#" class="preview-link">Ссылка</a>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="chat-tab">
+        <h2>Инструменты для чата</h2>
+        <p class="description">Настройте подсветку ключевых слов в чатах FunPay и уведомления</p>
+        
+        <div class="settings-grid">
+          <div class="setting-card full-width">
+            <h3>Настройки уведомлений</h3>
+            <div class="toggle-group">
+              <label class="toggle-label">
+                <input type="checkbox" id="highlight-enabled" class="toggle-input">
+                <span class="toggle-slider"></span>
+                <span>Включить подсветку ключевых слов</span>
+              </label>
+            </div>
+            <div class="toggle-group">
+              <label class="toggle-label">
+                <input type="checkbox" id="notifications-enabled" class="toggle-input">
+                <span class="toggle-slider"></span>
+                <span>Показывать уведомления для приоритетных слов</span>
+              </label>
+            </div>
+            <div class="toggle-group">
+              <label class="toggle-label">
+                <input type="checkbox" id="sound-enabled" class="toggle-input">
+                <span class="toggle-slider"></span>
+                <span>Звуковой сигнал для приоритетных слов</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-card full-width">
+            <h3>Ключевые слова</h3>
+            <p class="hint">Добавьте слова или фразы для отслеживания в чатах. Высокий приоритет включает уведомления.</p>
+            
+            <div class="keyword-add-form">
+              <input type="text" id="keyword-text" class="input-field" placeholder="Введите ключевое слово или фразу">
+              <select id="keyword-color" class="input-field keyword-color-select">
+                <option value="#ffeb3b">Желтый</option>
+                <option value="#4caf50">Зеленый</option>
+                <option value="#2196f3">Синий</option>
+                <option value="#ff9800">Оранжевый</option>
+                <option value="#f44336">Красный</option>
+                <option value="#9c27b0">Фиолетовый</option>
+                <option value="#00bcd4">Голубой</option>
+                <option value="#e91e63">Розовый</option>
+              </select>
+              <select id="keyword-priority" class="input-field">
+                <option value="low">Низкий приоритет</option>
+                <option value="medium">Средний приоритет</option>
+                <option value="high">Высокий приоритет</option>
+              </select>
+              <label class="checkbox-label">
+                <input type="checkbox" id="keyword-regex">
+                <span>Регулярное выражение</span>
+              </label>
+              <button id="add-keyword" class="btn btn-primary">+ Добавить</button>
+            </div>
+
+            <div id="keywords-list" class="keywords-list"></div>
+          </div>
+
+          <div class="setting-card full-width">
+            <h3>Справка</h3>
+            <p class="hint"><strong>Обычный текст:</strong> Подсветка точных совпадений (не учитывает регистр)</p>
+            <p class="hint"><strong>Регулярные выражения:</strong> Используйте regex для сложных шаблонов. Примеры:</p>
+            <ul class="hint-list">
+              <li><code>\b(купл|продам|обмен)\w*\b</code> - слова, начинающиеся с "купл", "продам", "обмен"</li>
+              <li><code>\d{4,}</code> - числа из 4 и более цифр</li>
+              <li><code>(срочно|быстро)</code> - слова "срочно" или "быстро"</li>
+            </ul>
+            <p class="hint"><strong>Приоритет:</strong></p>
+            <ul class="hint-list">
+              <li><strong>Низкий:</strong> Только подсветка</li>
+              <li><strong>Средний:</strong> Подсветка</li>
+              <li><strong>Высокий:</strong> Подсветка + уведомления и звук (если включены)</li>
+            </ul>
           </div>
         </div>
       </div>

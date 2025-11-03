@@ -6,7 +6,8 @@
   "author": "@MarkusGarantor",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "notifications"
   ],
   "host_permissions": [
     "https://funpay.com/*",
@@ -36,7 +37,7 @@
         "https://funpay.com/*",
         "https://*.funpay.com/*"
       ],
-      "js": ["content/content.js"],
+      "js": ["content/chat-highlighter.js", "content/content.js"],
       "css": ["content/inject.css"],
       "run_at": "document_start"
     }
