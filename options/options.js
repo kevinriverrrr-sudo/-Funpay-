@@ -29,9 +29,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveAll = document.getElementById('save-all');
   const resetAll = document.getElementById('reset-all');
 
+  const translationProvider = document.getElementById('translation-provider');
+  const translationApiEndpoint = document.getElementById('translation-api-endpoint');
+  const translationApiKey = document.getElementById('translation-api-key');
+  const translationSourceLang = document.getElementById('translation-source-lang');
+  const translationTargetLang = document.getElementById('translation-target-lang');
+  const autoTranslateProducts = document.getElementById('auto-translate-products');
+  const testTranslation = document.getElementById('test-translation');
+  const clearTranslationCache = document.getElementById('clear-translation-cache');
+  const translationTestResult = document.getElementById('translation-test-result');
+
   let currentSettings = {};
+  let currentTranslationSettings = {};
 
   await loadSettings();
+  await loadTranslationSettings();
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -129,6 +141,83 @@ document.addEventListener('DOMContentLoaded', async () => {
     showNotification('✓ Пользовательская тема сохранена!');
   });
 
+  translationProvider.addEventListener('change', () => {
+    currentTranslationSettings.translationApiProvider = translationProvider.value;
+    if (translationProvider.value === 'deepl') {
+      translationApiEndpoint.value = 'https://api-free.deepl.com/v2';
+      translationApiEndpoint.disabled = true;
+    } else {
+      translationApiEndpoint.disabled = false;
+      if (!translationApiEndpoint.value) {
+        translationApiEndpoint.value = 'https://libretranslate.com';
+      }
+    }
+  });
+
+  translationApiEndpoint.addEventListener('input', () => {
+    currentTranslationSettings.translationApiEndpoint = translationApiEndpoint.value;
+  });
+
+  translationApiKey.addEventListener('input', () => {
+    currentTranslationSettings.translationApiKey = translationApiKey.value;
+  });
+
+  translationSourceLang.addEventListener('change', () => {
+    currentTranslationSettings.translationSourceLang = translationSourceLang.value;
+  });
+
+  translationTargetLang.addEventListener('change', () => {
+    currentTranslationSettings.translationTargetLang = translationTargetLang.value;
+  });
+
+  autoTranslateProducts.addEventListener('change', () => {
+    currentTranslationSettings.autoTranslateProducts = autoTranslateProducts.checked;
+  });
+
+  testTranslation.addEventListener('click', async () => {
+    testTranslation.disabled = true;
+    testTranslation.textContent = '⏳ Проверка...';
+    translationTestResult.style.display = 'none';
+
+    await chrome.storage.local.set(currentTranslationSettings);
+
+    await chrome.runtime.sendMessage({
+      action: 'updateTranslationSettings',
+      settings: currentTranslationSettings
+    });
+
+    const result = await chrome.runtime.sendMessage({
+      action: 'testTranslationConnection'
+    });
+
+    translationTestResult.style.display = 'block';
+    if (result.success) {
+      translationTestResult.style.background = 'rgba(76, 175, 80, 0.2)';
+      translationTestResult.style.borderLeft = '4px solid #4caf50';
+      translationTestResult.innerHTML = `
+        <strong style="color: #4caf50;">✓ Подключение успешно!</strong><br>
+        ${result.message}
+      `;
+    } else {
+      translationTestResult.style.background = 'rgba(255, 107, 107, 0.2)';
+      translationTestResult.style.borderLeft = '4px solid #ff6b6b';
+      translationTestResult.innerHTML = `
+        <strong style="color: #ff6b6b;">❌ Ошибка подключения</strong><br>
+        ${result.message}
+      `;
+    }
+
+    testTranslation.disabled = false;
+    testTranslation.textContent = '🔌 Проверить подключение';
+  });
+
+  clearTranslationCache.addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({
+      action: 'clearTranslationCache'
+    });
+    showNotification('✓ Кэш переводов очищен!');
+  });
+
   saveAll.addEventListener('click', async () => {
     const settings = {
       theme: currentSettings.theme,
@@ -141,10 +230,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     await chrome.storage.sync.set(settings);
+    await chrome.storage.local.set(currentTranslationSettings);
 
     chrome.runtime.sendMessage({
       action: 'applyToAllTabs',
       settings: settings
+    });
+
+    await chrome.runtime.sendMessage({
+      action: 'updateTranslationSettings',
+      settings: currentTranslationSettings
     });
 
     showNotification('✓ Настройки сохранены и применены!');
@@ -162,7 +257,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         coverSize: 'cover'
       };
 
+      const defaultTranslationSettings = {
+        translationApiEndpoint: '',
+        translationApiKey: '',
+        translationApiProvider: 'libretranslate',
+        translationSourceLang: 'auto',
+        translationTargetLang: 'en',
+        autoTranslateProducts: false
+      };
+
       await chrome.storage.sync.set(defaultSettings);
+      await chrome.storage.local.set(defaultTranslationSettings);
 
       chrome.runtime.sendMessage({
         action: 'applyToAllTabs',
@@ -170,6 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       await loadSettings();
+      await loadTranslationSettings();
       showNotification('⟲ Все настройки сброшены!');
     }
   });
@@ -217,6 +323,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     updateFontPreview();
+  }
+
+  async function loadTranslationSettings() {
+    const settings = await chrome.storage.local.get({
+      translationApiEndpoint: '',
+      translationApiKey: '',
+      translationApiProvider: 'libretranslate',
+      translationSourceLang: 'auto',
+      translationTargetLang: 'en',
+      autoTranslateProducts: false
+    });
+
+    currentTranslationSettings = settings;
+
+    translationProvider.value = settings.translationApiProvider;
+    translationApiEndpoint.value = settings.translationApiEndpoint;
+    translationApiKey.value = settings.translationApiKey;
+    translationSourceLang.value = settings.translationSourceLang;
+    translationTargetLang.value = settings.translationTargetLang;
+    autoTranslateProducts.checked = settings.autoTranslateProducts;
+
+    if (settings.translationApiProvider === 'deepl') {
+      translationApiEndpoint.disabled = true;
+    }
   }
 
   function updateFontPreview() {
