@@ -410,4 +410,327 @@ class FunPayCustomizer {
   }
 }
 
+class TranslationUI {
+  constructor() {
+    this.floatingWidget = null;
+    this.autoTranslateProducts = false;
+    this.translatedElements = new Set();
+    this.init();
+  }
+
+  async init() {
+    await this.loadSettings();
+    this.createFloatingWidget();
+    this.setupSelectionListener();
+    this.setupMessageListener();
+    if (this.autoTranslateProducts) {
+      this.translateProducts();
+    }
+  }
+
+  async loadSettings() {
+    const settings = await chrome.storage.local.get({
+      autoTranslateProducts: false
+    });
+    this.autoTranslateProducts = settings.autoTranslateProducts;
+  }
+
+  createFloatingWidget() {
+    this.floatingWidget = document.createElement('div');
+    this.floatingWidget.id = 'funpay-translation-widget';
+    this.floatingWidget.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      max-width: 300px;
+      display: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 600;
+    `;
+    header.innerHTML = `
+      <span>🌐 Translation</span>
+      <button id="close-translation-widget" style="
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+      ">×</button>
+    `;
+
+    const content = document.createElement('div');
+    content.id = 'translation-widget-content';
+    content.style.cssText = `
+      margin-top: 10px;
+      line-height: 1.4;
+    `;
+
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.id = 'translation-loading';
+    loadingSpinner.style.cssText = `
+      display: none;
+      text-align: center;
+      padding: 10px;
+    `;
+    loadingSpinner.innerHTML = '⏳ Translating...';
+
+    this.floatingWidget.appendChild(header);
+    this.floatingWidget.appendChild(loadingSpinner);
+    this.floatingWidget.appendChild(content);
+    document.body.appendChild(this.floatingWidget);
+
+    document.getElementById('close-translation-widget').addEventListener('click', () => {
+      this.hideWidget();
+    });
+  }
+
+  setupSelectionListener() {
+    document.addEventListener('mouseup', (e) => {
+      const selectedText = window.getSelection().toString().trim();
+      if (selectedText.length > 0 && selectedText.length < 500) {
+        setTimeout(() => {
+          const selection = window.getSelection();
+          if (selection.toString().trim() === selectedText) {
+            this.showTranslationButton(e.pageX, e.pageY, selectedText);
+          }
+        }, 100);
+      }
+    });
+  }
+
+  showTranslationButton(x, y, text) {
+    let btn = document.getElementById('quick-translate-btn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'quick-translate-btn';
+      btn.textContent = '🌐 Translate';
+      btn.style.cssText = `
+        position: absolute;
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        z-index: 10000;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      `;
+      document.body.appendChild(btn);
+
+      btn.addEventListener('click', () => {
+        this.translateText(text);
+        btn.style.display = 'none';
+      });
+    }
+
+    btn.style.left = `${x}px`;
+    btn.style.top = `${y + 15}px`;
+    btn.style.display = 'block';
+
+    setTimeout(() => {
+      const handleClick = (e) => {
+        if (e.target !== btn) {
+          btn.style.display = 'none';
+          document.removeEventListener('click', handleClick);
+        }
+      };
+      document.addEventListener('click', handleClick);
+    }, 100);
+  }
+
+  async translateText(text, sourceLang = null, targetLang = null) {
+    this.showWidget();
+    this.showLoading(true);
+
+    try {
+      const response = await chrome.runtime.sendMessage({
+        action: 'translate',
+        text: text,
+        sourceLang: sourceLang,
+        targetLang: targetLang
+      });
+
+      if (response.success) {
+        this.displayTranslation(text, response.translatedText);
+      } else {
+        this.displayError(response.error);
+      }
+    } catch (error) {
+      this.displayError(error.message);
+    } finally {
+      this.showLoading(false);
+    }
+  }
+
+  async translateProducts() {
+    const productElements = document.querySelectorAll('.tc-item, .offer-list-item, [class*="product"], [class*="lot"]');
+    
+    for (const element of productElements) {
+      if (this.translatedElements.has(element)) continue;
+      
+      const titleElement = element.querySelector('.tc-title, .offer-title, h3, h4, [class*="title"]');
+      const descElement = element.querySelector('.tc-desc, .offer-desc, .description, [class*="desc"]');
+
+      if (titleElement) {
+        await this.translateElement(titleElement);
+      }
+      if (descElement) {
+        await this.translateElement(descElement);
+      }
+      
+      this.translatedElements.add(element);
+    }
+  }
+
+  async translateElement(element) {
+    const originalText = element.textContent.trim();
+    if (!originalText || originalText.length < 3) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    
+    const toggle = document.createElement('button');
+    toggle.textContent = '🌐';
+    toggle.style.cssText = `
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: rgba(0, 102, 204, 0.8);
+      color: white;
+      border: none;
+      padding: 3px 6px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 10px;
+      z-index: 100;
+    `;
+
+    element.style.position = 'relative';
+    element.appendChild(toggle);
+
+    let isTranslated = false;
+    let translatedText = null;
+
+    toggle.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!isTranslated) {
+        if (!translatedText) {
+          toggle.textContent = '⏳';
+          try {
+            const response = await chrome.runtime.sendMessage({
+              action: 'translate',
+              text: originalText
+            });
+            if (response.success) {
+              translatedText = response.translatedText;
+            }
+          } catch (error) {
+            toggle.textContent = '❌';
+            return;
+          }
+        }
+        
+        if (translatedText) {
+          element.textContent = translatedText;
+          element.appendChild(toggle);
+          toggle.textContent = '↩️';
+          isTranslated = true;
+        }
+      } else {
+        element.textContent = originalText;
+        element.appendChild(toggle);
+        toggle.textContent = '🌐';
+        isTranslated = false;
+      }
+    });
+  }
+
+  showWidget() {
+    this.floatingWidget.style.display = 'block';
+  }
+
+  hideWidget() {
+    this.floatingWidget.style.display = 'none';
+  }
+
+  showLoading(show) {
+    const loading = document.getElementById('translation-loading');
+    const content = document.getElementById('translation-widget-content');
+    if (show) {
+      loading.style.display = 'block';
+      content.style.display = 'none';
+    } else {
+      loading.style.display = 'none';
+      content.style.display = 'block';
+    }
+  }
+
+  displayTranslation(originalText, translatedText) {
+    const content = document.getElementById('translation-widget-content');
+    content.innerHTML = `
+      <div style="margin-bottom: 10px;">
+        <strong style="color: #aaa; font-size: 11px;">Original:</strong>
+        <div style="padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; margin-top: 5px;">
+          ${this.escapeHtml(originalText)}
+        </div>
+      </div>
+      <div>
+        <strong style="color: #90caf9; font-size: 11px;">Translation:</strong>
+        <div style="padding: 8px; background: rgba(144, 202, 249, 0.2); border-radius: 5px; margin-top: 5px;">
+          ${this.escapeHtml(translatedText)}
+        </div>
+      </div>
+    `;
+  }
+
+  displayError(errorMessage) {
+    const content = document.getElementById('translation-widget-content');
+    content.innerHTML = `
+      <div style="color: #ff6b6b; padding: 10px; background: rgba(255,107,107,0.2); border-radius: 5px;">
+        <strong>❌ Error:</strong><br>
+        ${this.escapeHtml(errorMessage)}
+      </div>
+    `;
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  setupMessageListener() {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.action === 'translateSelection') {
+        this.translateText(request.text);
+        sendResponse({ success: true });
+      } else if (request.action === 'translatePage') {
+        this.translateProducts();
+        sendResponse({ success: true });
+      }
+    });
+  }
+}
+
 const customizer = new FunPayCustomizer();
+const translationUI = new TranslationUI();
