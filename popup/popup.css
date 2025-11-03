@@ -243,3 +243,16 @@ input[type="range"]::-moz-range-thumb:hover {
 .popup-content::-webkit-scrollbar-thumb:hover {
   background: #5568d3;
 }
+
+.popup-footer {
+  background: #f8f9fa;
+  padding: 12px 20px;
+  text-align: center;
+  border-top: 1px solid #e0e0e0;
+}
+
+.popup-footer .author-text {
+  font-size: 11px;
+  color: #999;
+  margin: 0;
+}
