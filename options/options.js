@@ -29,7 +29,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveAll = document.getElementById('save-all');
   const resetAll = document.getElementById('reset-all');
 
+  const lotFileUpload = document.getElementById('lot-file-upload');
+  const lotFileInfo = document.getElementById('lot-file-info');
+  const lotFileName = document.getElementById('lot-file-name');
+  const lotCountInfo = document.getElementById('lot-count-info');
+  const removeLotFile = document.getElementById('remove-lot-file');
+  const batchSize = document.getElementById('batch-size');
+  const batchSizeDisplay = document.getElementById('batch-size-display');
+  const throttleDelay = document.getElementById('throttle-delay');
+  const throttleDelayDisplay = document.getElementById('throttle-delay-display');
+  const validateBeforeImport = document.getElementById('validate-before-import');
+  const reviewBeforeSubmit = document.getElementById('review-before-submit');
+  const validationResults = document.getElementById('validation-results');
+  const validationContent = document.getElementById('validation-content');
+  const startImport = document.getElementById('start-import');
+  const importProgress = document.getElementById('import-progress');
+  const progressFill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+  const cancelImport = document.getElementById('cancel-import');
+
   let currentSettings = {};
+  let lotsData = null;
+  let importCancelled = false;
 
   await loadSettings();
 
@@ -174,6 +195,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  lotFileUpload.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        showNotification('❌ Размер файла не должен превышать 10 МБ', 'error');
+        return;
+      }
+
+      try {
+        const content = await readFileContent(file);
+        const parsedLots = parseLotsFile(content, file.name);
+        
+        if (parsedLots && parsedLots.length > 0) {
+          lotsData = parsedLots;
+          lotFileName.textContent = `📄 ${file.name}`;
+          lotCountInfo.textContent = `Найдено лотов: ${parsedLots.length}`;
+          lotFileInfo.style.display = 'block';
+          startImport.disabled = false;
+
+          if (validateBeforeImport.checked) {
+            validateLots(parsedLots);
+          }
+
+          showNotification(`✓ Файл загружен: ${parsedLots.length} лотов`);
+        } else {
+          showNotification('❌ Не удалось найти лоты в файле', 'error');
+        }
+      } catch (error) {
+        showNotification(`❌ Ошибка при чтении файла: ${error.message}`, 'error');
+      }
+    }
+  });
+
+  removeLotFile.addEventListener('click', () => {
+    lotsData = null;
+    lotFileInfo.style.display = 'none';
+    lotFileUpload.value = '';
+    startImport.disabled = true;
+    validationResults.style.display = 'none';
+    importProgress.style.display = 'none';
+  });
+
+  batchSize.addEventListener('input', (e) => {
+    batchSizeDisplay.textContent = e.target.value;
+    saveImportSettings();
+  });
+
+  throttleDelay.addEventListener('input', (e) => {
+    throttleDelayDisplay.textContent = e.target.value;
+    saveImportSettings();
+  });
+
+  validateBeforeImport.addEventListener('change', () => {
+    if (validateBeforeImport.checked && lotsData) {
+      validateLots(lotsData);
+    } else {
+      validationResults.style.display = 'none';
+    }
+    saveImportSettings();
+  });
+
+  reviewBeforeSubmit.addEventListener('change', () => {
+    saveImportSettings();
+  });
+
+  startImport.addEventListener('click', async () => {
+    if (!lotsData || lotsData.length === 0) {
+      showNotification('❌ Сначала загрузите файл с лотами', 'error');
+      return;
+    }
+
+    importCancelled = false;
+    startImport.disabled = true;
+    importProgress.style.display = 'block';
+
+    await performImport(lotsData);
+  });
+
+  cancelImport.addEventListener('click', () => {
+    importCancelled = true;
+    showNotification('⏸ Импорт отменен', 'error');
+  });
+
+  await loadImportSettings();
+
   async function loadSettings() {
     const settings = await chrome.storage.sync.get({
       theme: 'default',
@@ -279,5 +385,252 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
       notification.classList.remove('show');
     }, 3000);
+  }
+
+  async function readFileContent(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(new Error('Ошибка чтения файла'));
+      reader.readAsText(file);
+    });
+  }
+
+  function parseLotsFile(content, fileName) {
+    const isJSON = fileName.endsWith('.json');
+    
+    if (isJSON) {
+      try {
+        const data = JSON.parse(content);
+        return Array.isArray(data) ? data : [data];
+      } catch (error) {
+        throw new Error('Неверный формат JSON');
+      }
+    } else {
+      return parseTxtLots(content);
+    }
+  }
+
+  function parseTxtLots(content) {
+    const lots = [];
+    const lotBlocks = content.split('---').map(block => block.trim()).filter(block => block);
+
+    for (const block of lotBlocks) {
+      const lot = {};
+      const lines = block.split('\n');
+
+      for (const line of lines) {
+        const colonIndex = line.indexOf(':');
+        if (colonIndex > 0) {
+          const key = line.substring(0, colonIndex).trim();
+          const value = line.substring(colonIndex + 1).trim();
+          
+          if (key && value) {
+            if (key === 'price' || key === 'stock') {
+              lot[key] = parseFloat(value);
+            } else {
+              lot[key] = value;
+            }
+          }
+        }
+      }
+
+      if (Object.keys(lot).length > 0) {
+        lots.push(lot);
+      }
+    }
+
+    return lots;
+  }
+
+  function validateLots(lots) {
+    const results = [];
+    const requiredFields = ['name', 'price'];
+    const optionalFields = ['description', 'category', 'subcategory', 'gameId', 'serverId', 'stock', 'currency'];
+    
+    lots.forEach((lot, index) => {
+      const lotErrors = [];
+      const lotWarnings = [];
+
+      requiredFields.forEach(field => {
+        if (!lot[field]) {
+          lotErrors.push(`Отсутствует обязательное поле: ${field}`);
+        }
+      });
+
+      if (lot.price && (isNaN(lot.price) || lot.price <= 0)) {
+        lotErrors.push('Цена должна быть положительным числом');
+      }
+
+      if (lot.stock && (isNaN(lot.stock) || lot.stock < 0)) {
+        lotErrors.push('Количество должно быть неотрицательным числом');
+      }
+
+      if (lot.name && lot.name.length > 200) {
+        lotWarnings.push('Название слишком длинное (более 200 символов)');
+      }
+
+      if (lot.description && lot.description.length > 5000) {
+        lotWarnings.push('Описание слишком длинное (более 5000 символов)');
+      }
+
+      results.push({
+        index: index + 1,
+        name: lot.name || 'Без названия',
+        errors: lotErrors,
+        warnings: lotWarnings,
+        valid: lotErrors.length === 0
+      });
+    });
+
+    displayValidationResults(results);
+    return results;
+  }
+
+  function displayValidationResults(results) {
+    validationContent.innerHTML = '';
+    
+    const totalLots = results.length;
+    const validLots = results.filter(r => r.valid).length;
+    const invalidLots = totalLots - validLots;
+
+    const summary = document.createElement('div');
+    summary.className = 'validation-item ' + (invalidLots > 0 ? 'warning' : 'success');
+    summary.innerHTML = `
+      <strong>Итого:</strong>
+      <span>Всего лотов: ${totalLots} | Валидных: ${validLots} | С ошибками: ${invalidLots}</span>
+    `;
+    validationContent.appendChild(summary);
+
+    results.forEach(result => {
+      if (result.errors.length > 0 || result.warnings.length > 0) {
+        const item = document.createElement('div');
+        item.className = 'validation-item ' + (result.errors.length > 0 ? 'error' : 'warning');
+        
+        let html = `<strong>Лот #${result.index}: ${result.name}</strong>`;
+        
+        if (result.errors.length > 0) {
+          html += '<div style="margin-top: 5px;">';
+          result.errors.forEach(error => {
+            html += `<span style="display: block; color: #721c24;">❌ ${error}</span>`;
+          });
+          html += '</div>';
+        }
+        
+        if (result.warnings.length > 0) {
+          html += '<div style="margin-top: 5px;">';
+          result.warnings.forEach(warning => {
+            html += `<span style="display: block; color: #856404;">⚠️ ${warning}</span>`;
+          });
+          html += '</div>';
+        }
+        
+        item.innerHTML = html;
+        validationContent.appendChild(item);
+      }
+    });
+
+    validationResults.style.display = 'block';
+  }
+
+  async function performImport(lots) {
+    const batch = parseInt(batchSize.value);
+    const delay = parseFloat(throttleDelay.value) * 1000;
+    const reviewMode = reviewBeforeSubmit.checked;
+    
+    let processed = 0;
+    const total = lots.length;
+
+    for (let i = 0; i < total; i += batch) {
+      if (importCancelled) {
+        startImport.disabled = false;
+        return;
+      }
+
+      const batchLots = lots.slice(i, Math.min(i + batch, total));
+      
+      for (const lot of batchLots) {
+        if (importCancelled) {
+          startImport.disabled = false;
+          return;
+        }
+
+        try {
+          await importLot(lot, reviewMode);
+          processed++;
+        } catch (error) {
+          console.error('Ошибка импорта лота:', error);
+          showNotification(`❌ Ошибка: ${error.message}`, 'error');
+        }
+
+        updateProgress(processed, total);
+      }
+
+      if (i + batch < total) {
+        await sleep(delay);
+      }
+    }
+
+    showNotification(`✓ Импорт завершен! Обработано: ${processed} из ${total}`);
+    startImport.disabled = false;
+    importProgress.style.display = 'none';
+  }
+
+  async function importLot(lot, reviewMode) {
+    const tabs = await chrome.tabs.query({ url: ['https://funpay.com/*', 'https://*.funpay.com/*'] });
+    
+    if (tabs.length === 0) {
+      throw new Error('Откройте вкладку FunPay для импорта');
+    }
+
+    await chrome.tabs.sendMessage(tabs[0].id, {
+      action: 'importLot',
+      lot: lot,
+      reviewMode: reviewMode
+    });
+
+    if (!reviewMode) {
+      await sleep(500);
+    }
+  }
+
+  function updateProgress(processed, total) {
+    const percentage = (processed / total) * 100;
+    progressFill.style.width = `${percentage}%`;
+    progressText.textContent = `Обработано: ${processed} из ${total}`;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function saveImportSettings() {
+    const importSettings = {
+      batchSize: parseInt(batchSize.value),
+      throttleDelay: parseFloat(throttleDelay.value),
+      validateBeforeImport: validateBeforeImport.checked,
+      reviewBeforeSubmit: reviewBeforeSubmit.checked
+    };
+
+    await chrome.storage.sync.set({ importSettings });
+  }
+
+  async function loadImportSettings() {
+    const data = await chrome.storage.sync.get({
+      importSettings: {
+        batchSize: 5,
+        throttleDelay: 2,
+        validateBeforeImport: true,
+        reviewBeforeSubmit: true
+      }
+    });
+
+    const settings = data.importSettings;
+    batchSize.value = settings.batchSize;
+    batchSizeDisplay.textContent = settings.batchSize;
+    throttleDelay.value = settings.throttleDelay;
+    throttleDelayDisplay.textContent = settings.throttleDelay;
+    validateBeforeImport.checked = settings.validateBeforeImport;
+    reviewBeforeSubmit.checked = settings.reviewBeforeSubmit;
   }
 });

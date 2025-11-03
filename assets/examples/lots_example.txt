@@ -1,0 +1,46 @@
+name: Аккаунт Dota 2 - 5000 MMR
+description: Аккаунт с высоким рейтингом, более 200 часов игры, много скинов и предметов. Все герои разблокированы. Безопасная передача через Steam Guard.
+price: 5000
+currency: RUB
+category: gaming
+subcategory: accounts
+gameId: dota2
+stock: 1
+---
+name: Золото World of Warcraft - 1000 единиц
+description: Быстрая доставка золота на любой сервер EU. Доставка в течение 15-30 минут. Безопасная передача через аукцион.
+price: 500
+currency: RUB
+category: gaming
+subcategory: currency
+gameId: wow
+serverId: eu-ravencrest
+stock: 100
+---
+name: CS:GO Скины - Набор для начинающих
+description: Набор из 5 популярных скинов для новичков. Все предметы в хорошем состоянии (Minimal Wear). Быстрая передача через трейд.
+price: 1200
+currency: RUB
+category: gaming
+subcategory: items
+gameId: csgo
+stock: 15
+---
+name: Буст рейтинга League of Legends
+description: Профессиональный буст от Iron до Gold за 3-5 дней. Работаем только через VPN, полная конфиденциальность. Гарантия результата.
+price: 3000
+currency: RUB
+category: gaming
+subcategory: boosting
+gameId: lol
+stock: 5
+---
+name: Аккаунт Steam - 50+ игр
+description: Steam аккаунт с более чем 50 играми, включая GTA V, Cyberpunk 2077, Red Dead Redemption 2 и другие. Полный доступ к почте. Без VAC банов.
+price: 8000
+currency: RUB
+category: gaming
+subcategory: accounts
+gameId: steam
+stock: 1
+---

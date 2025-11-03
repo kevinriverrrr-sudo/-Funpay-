@@ -22,6 +22,7 @@
         <button class="tab-btn" data-tab="fonts">Шрифты</button>
         <button class="tab-btn" data-tab="covers">Обложки</button>
         <button class="tab-btn" data-tab="custom">Своя тема</button>
+        <button class="tab-btn" data-tab="lots">Лоты</button>
       </div>
 
       <div class="tab-content active" id="themes-tab">
@@ -225,6 +226,118 @@
                 <a href="#" class="preview-link">Ссылка</a>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="lots-tab">
+        <h2>Импорт лотов</h2>
+        <p class="description">Загрузите файл с лотами (TXT или JSON) для автоматического заполнения форм FunPay</p>
+        
+        <div class="settings-grid">
+          <div class="setting-card full-width">
+            <label for="lot-file-upload" class="upload-label">
+              <span class="upload-icon">📦</span>
+              <span>Выбрать файл с лотами</span>
+              <span class="upload-hint">TXT или JSON, до 10 МБ</span>
+            </label>
+            <input type="file" id="lot-file-upload" accept=".txt,.json" style="display: none;">
+          </div>
+
+          <div id="lot-file-info" class="setting-card full-width" style="display: none;">
+            <div class="file-info-content">
+              <h4>Загруженный файл:</h4>
+              <p id="lot-file-name"></p>
+              <p id="lot-count-info"></p>
+              <button id="remove-lot-file" class="btn btn-secondary">✕ Удалить файл</button>
+            </div>
+          </div>
+
+          <div class="setting-card">
+            <label for="batch-size">Размер пакета: <span id="batch-size-display">5</span> лотов</label>
+            <input type="range" id="batch-size" class="input-range" min="1" max="20" value="5" step="1">
+            <p class="input-hint">Количество лотов для одновременной обработки</p>
+          </div>
+
+          <div class="setting-card">
+            <label for="throttle-delay">Задержка: <span id="throttle-delay-display">2</span> сек</label>
+            <input type="range" id="throttle-delay" class="input-range" min="1" max="10" value="2" step="0.5">
+            <p class="input-hint">Пауза между пакетами для избежания блокировки</p>
+          </div>
+
+          <div class="setting-card full-width">
+            <label>
+              <input type="checkbox" id="validate-before-import" checked>
+              <span>Валидировать данные перед импортом</span>
+            </label>
+            <p class="input-hint">Проверять обязательные поля и корректность данных</p>
+          </div>
+
+          <div class="setting-card full-width">
+            <label>
+              <input type="checkbox" id="review-before-submit" checked>
+              <span>Проверять каждый лот перед отправкой</span>
+            </label>
+            <p class="input-hint">Позволяет просмотреть и отредактировать данные перед публикацией</p>
+          </div>
+
+          <div id="validation-results" class="validation-results" style="display: none;">
+            <h4>Результаты валидации:</h4>
+            <div id="validation-content"></div>
+          </div>
+
+          <div class="setting-card full-width">
+            <button id="start-import" class="btn btn-primary btn-large" disabled>
+              🚀 Начать импорт
+            </button>
+          </div>
+
+          <div id="import-progress" class="import-progress" style="display: none;">
+            <h4>Прогресс импорта:</h4>
+            <div class="progress-bar">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <p id="progress-text">Обработано: 0 из 0</p>
+            <button id="cancel-import" class="btn btn-secondary">⏸ Отменить импорт</button>
+          </div>
+        </div>
+
+        <div class="import-instructions">
+          <h3>Формат файла</h3>
+          <p>Вы можете использовать два формата файлов для импорта лотов:</p>
+          
+          <div class="format-example">
+            <h4>JSON формат:</h4>
+            <pre><code>[
+  {
+    "name": "Название лота",
+    "description": "Описание лота",
+    "price": 100,
+    "currency": "RUB",
+    "category": "gaming",
+    "subcategory": "accounts",
+    "gameId": "game_id",
+    "serverId": "server_id",
+    "stock": 10
+  }
+]</code></pre>
+          </div>
+
+          <div class="format-example">
+            <h4>TXT формат:</h4>
+            <pre><code>name: Название лота
+description: Описание лота
+price: 100
+currency: RUB
+category: gaming
+subcategory: accounts
+gameId: game_id
+serverId: server_id
+stock: 10
+---
+name: Название второго лота
+...</code></pre>
+            <p class="format-note">Разделитель между лотами: <code>---</code></p>
           </div>
         </div>
       </div>
