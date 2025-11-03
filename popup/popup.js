@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentSettings = {};
 
   await loadSettings();
+  await loadAutomationStats();
 
   fontSizeInput.addEventListener('input', (e) => {
     fontSizeValue.textContent = e.target.value;
@@ -129,6 +130,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settings.coverImage) {
       coverPreviewImg.src = settings.coverImage;
       coverPreview.style.display = 'block';
+    }
+  }
+
+  async function loadAutomationStats() {
+    try {
+      const configResponse = await chrome.runtime.sendMessage({ 
+        action: 'getAutomationConfig' 
+      });
+      
+      const statsResponse = await chrome.runtime.sendMessage({ 
+        action: 'getAutomationStats' 
+      });
+      
+      const pendingResponse = await chrome.runtime.sendMessage({ 
+        action: 'getPendingMessages' 
+      });
+
+      if (configResponse && configResponse.success) {
+        const status = configResponse.config.enabled ? 'Включено' : 'Выключено';
+        document.getElementById('automation-status').textContent = status;
+        document.getElementById('automation-status').style.color = 
+          configResponse.config.enabled ? '#4caf50' : '#999';
+      }
+
+      if (statsResponse && statsResponse.success) {
+        document.getElementById('messages-today').textContent = 
+          statsResponse.stats.sentToday || 0;
+      }
+
+      if (pendingResponse && pendingResponse.success) {
+        document.getElementById('pending-count').textContent = 
+          pendingResponse.messages.length || 0;
+        
+        if (pendingResponse.messages.length > 0) {
+          displayPendingMessages(pendingResponse.messages);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading automation stats:', error);
+    }
+  }
+
+  function displayPendingMessages(messages) {
+    const container = document.getElementById('pending-messages-list');
+    
+    if (messages.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+    container.innerHTML = '<div class="pending-header">Запланированные сообщения:</div>';
+
+    messages.slice(0, 3).forEach(msg => {
+      const timeLeft = Math.max(0, msg.scheduledTime - Date.now());
+      const minutesLeft = Math.ceil(timeLeft / 60000);
+      
+      const msgEl = document.createElement('div');
+      msgEl.className = 'pending-message-item';
+      msgEl.innerHTML = `
+        <span class="pending-contact">Контакт: ${msg.contactId}</span>
+        <span class="pending-time">через ${minutesLeft} мин</span>
+      `;
+      container.appendChild(msgEl);
+    });
+
+    if (messages.length > 3) {
+      const moreEl = document.createElement('div');
+      moreEl.className = 'pending-more';
+      moreEl.textContent = `+${messages.length - 3} еще...`;
+      container.appendChild(moreEl);
     }
   }
 

@@ -8,8 +8,9 @@
 2. [Storage API](#storage-api)
 3. [Messaging API](#messaging-api)
 4. [Content Script API](#content-script-api)
-5. [Добавление новых тем](#добавление-новых-тем)
-6. [Добавление новых шрифтов](#добавление-новых-шрифтов)
+5. [Automation API](#automation-api)
+6. [Добавление новых тем](#добавление-новых-тем)
+7. [Добавление новых шрифтов](#добавление-новых-шрифтов)
 
 ---
 
@@ -195,6 +196,204 @@ customizer.applySettings({
   coverPosition: 'center',
   coverSize: 'cover'
 });
+```
+
+---
+
+## 🤖 Automation API
+
+### Получение конфигурации автоматизации
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'getAutomationConfig'
+});
+
+if (response.success) {
+  console.log('Automation config:', response.config);
+}
+```
+
+### Установка конфигурации автоматизации
+
+```javascript
+const config = {
+  enabled: true,
+  templates: [],
+  reviewTemplates: [],
+  rateLimitPerContact: 3,
+  rateLimitPeriodMinutes: 60,
+  quietHoursEnabled: true,
+  quietHoursStart: '22:00',
+  quietHoursEnd: '08:00',
+  delayMinutes: 5,
+  escalationEnabled: false,
+  escalationDelayHours: 24,
+  showNotifications: true
+};
+
+const response = await chrome.runtime.sendMessage({
+  action: 'setAutomationConfig',
+  config: config
+});
+```
+
+### Планирование автоответа (follow-up)
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'scheduleFollowUp',
+  contactId: 'user123',
+  templateId: 'welcome_template',
+  delayMinutes: 10
+});
+
+if (response.success) {
+  console.log('Message scheduled:', response.messageId);
+} else {
+  console.error('Failed:', response.reason);
+}
+```
+
+### Планирование отложенного ответа
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'scheduleDelayedResponse',
+  contactId: 'user456',
+  templateId: 'thank_you_template',
+  delayMinutes: 5
+});
+```
+
+### Планирование эскалации
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'scheduleEscalation',
+  contactId: 'user789',
+  templateId: 'reminder_template',
+  delayHours: 24
+});
+```
+
+### Отмена запланированного сообщения
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'cancelMessage',
+  messageId: 'msg_1234567890'
+});
+```
+
+### Получение списка запланированных сообщений
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'getPendingMessages'
+});
+
+if (response.success) {
+  console.log('Pending messages:', response.messages);
+  // [{ id, contactId, templateId, scheduledTime, status, createdAt }]
+}
+```
+
+### Получение статистики автоматизации
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'getAutomationStats'
+});
+
+if (response.success) {
+  console.log('Stats:', response.stats);
+  // { totalSent, totalFailed, lastSent, sentToday, lastResetDate }
+}
+```
+
+### Экспорт настроек
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'exportSettings'
+});
+
+if (response.success) {
+  const jsonData = JSON.stringify(response.data, null, 2);
+  // Сохранить в файл или использовать
+}
+```
+
+### Импорт настроек
+
+```javascript
+const importData = JSON.parse(jsonString);
+
+const response = await chrome.runtime.sendMessage({
+  action: 'importSettings',
+  data: importData,
+  options: {
+    includeThemes: true,
+    includeAutomation: true,
+    includeStats: false,
+    clearExisting: false
+  }
+});
+
+if (response.success) {
+  console.log('Imported:', response.imported);
+} else {
+  console.error('Errors:', response.errors);
+}
+```
+
+### Валидация данных импорта
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'validateImportData',
+  data: importData
+});
+
+if (response.validation.valid) {
+  console.log('Data is valid');
+} else {
+  console.error('Validation errors:', response.validation.errors);
+}
+```
+
+### Очистка истории отзывов
+
+```javascript
+const response = await chrome.runtime.sendMessage({
+  action: 'clearReviewHistory'
+});
+```
+
+### Структура шаблона сообщения
+
+```javascript
+{
+  id: string,           // Уникальный ID
+  name: string,         // Название шаблона
+  content: string       // Текст сообщения
+}
+```
+
+### Структура шаблона для отзывов
+
+```javascript
+{
+  id: string,                    // Уникальный ID
+  name: string,                  // Название шаблона
+  enabled: boolean,              // Активен ли шаблон
+  content: string,               // Текст ответа
+  delayMinutes: number,          // Задержка перед отправкой
+  ratingFilter: number[],        // Фильтр по рейтингу (1-5)
+  keywordFilter: string[],       // Фильтр по ключевым словам
+  oneResponsePerReview: boolean  // Только один ответ на отзыв
+}
 ```
 
 ---

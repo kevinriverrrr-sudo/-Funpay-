@@ -22,6 +22,8 @@
         <button class="tab-btn" data-tab="fonts">Шрифты</button>
         <button class="tab-btn" data-tab="covers">Обложки</button>
         <button class="tab-btn" data-tab="custom">Своя тема</button>
+        <button class="tab-btn" data-tab="automation">🤖 Автоматизация</button>
+        <button class="tab-btn" data-tab="import-export">💾 Экспорт/Импорт</button>
       </div>
 
       <div class="tab-content active" id="themes-tab">
@@ -224,6 +226,137 @@
                 <p class="preview-text-secondary">Вторичный текст</p>
                 <a href="#" class="preview-link">Ссылка</a>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="automation-tab">
+        <h2>🤖 Настройка автоматизации</h2>
+        <p class="description">Настройте автоматические ответы, отслеживание отзывов и правила отправки</p>
+        
+        <div class="settings-grid">
+          <div class="setting-card full-width">
+            <label class="checkbox-label">
+              <input type="checkbox" id="automation-enabled">
+              <span>Включить автоматизацию</span>
+            </label>
+          </div>
+
+          <div class="setting-card">
+            <label for="rate-limit-per-contact">Лимит сообщений на контакт:</label>
+            <input type="number" id="rate-limit-per-contact" class="input-field" min="1" max="10" value="3">
+          </div>
+
+          <div class="setting-card">
+            <label for="rate-limit-period">Период лимита (минуты):</label>
+            <input type="number" id="rate-limit-period" class="input-field" min="10" max="1440" value="60">
+          </div>
+
+          <div class="setting-card full-width">
+            <label class="checkbox-label">
+              <input type="checkbox" id="quiet-hours-enabled">
+              <span>Включить тихие часы</span>
+            </label>
+          </div>
+
+          <div class="setting-card">
+            <label for="quiet-hours-start">Начало тихих часов:</label>
+            <input type="time" id="quiet-hours-start" class="input-field" value="22:00">
+          </div>
+
+          <div class="setting-card">
+            <label for="quiet-hours-end">Конец тихих часов:</label>
+            <input type="time" id="quiet-hours-end" class="input-field" value="08:00">
+          </div>
+
+          <div class="setting-card">
+            <label for="default-delay">Задержка по умолчанию (минуты):</label>
+            <input type="number" id="default-delay" class="input-field" min="1" max="120" value="5">
+          </div>
+
+          <div class="setting-card">
+            <label for="escalation-delay">Задержка эскалации (часы):</label>
+            <input type="number" id="escalation-delay" class="input-field" min="1" max="168" value="24">
+          </div>
+
+          <div class="setting-card full-width">
+            <label class="checkbox-label">
+              <input type="checkbox" id="escalation-enabled">
+              <span>Включить эскалацию</span>
+            </label>
+          </div>
+
+          <div class="setting-card full-width">
+            <label class="checkbox-label">
+              <input type="checkbox" id="show-notifications">
+              <span>Показывать уведомления</span>
+            </label>
+          </div>
+
+          <div class="setting-card full-width">
+            <h3>Шаблоны для отзывов</h3>
+            <div id="review-templates-list"></div>
+            <button id="add-review-template" class="btn btn-secondary">+ Добавить шаблон</button>
+          </div>
+
+          <div class="setting-card full-width">
+            <h3>Шаблоны сообщений</h3>
+            <div id="message-templates-list"></div>
+            <button id="add-message-template" class="btn btn-secondary">+ Добавить шаблон</button>
+          </div>
+
+          <div class="setting-card full-width">
+            <button id="save-automation" class="btn btn-primary">💾 Сохранить настройки автоматизации</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="import-export-tab">
+        <h2>💾 Экспорт и импорт настроек</h2>
+        <p class="description">Сохраните или восстановите все настройки расширения</p>
+        
+        <div class="settings-grid">
+          <div class="setting-card full-width">
+            <h3>Экспорт настроек</h3>
+            <p>Сохраните все настройки в файл для резервного копирования или переноса на другое устройство.</p>
+            <button id="export-settings" class="btn btn-primary">📥 Экспортировать настройки</button>
+          </div>
+
+          <div class="setting-card full-width">
+            <h3>Импорт настроек</h3>
+            <p>Восстановите настройки из ранее сохраненного файла.</p>
+            
+            <div class="import-options">
+              <label class="checkbox-label">
+                <input type="checkbox" id="import-themes" checked>
+                <span>Импортировать темы и оформление</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="import-automation" checked>
+                <span>Импортировать настройки автоматизации</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="import-stats">
+                <span>Импортировать статистику</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="clear-existing">
+                <span>Очистить существующие настройки перед импортом</span>
+              </label>
+            </div>
+
+            <label for="import-file" class="upload-label">
+              <span class="upload-icon">📁</span>
+              <span>Выбрать файл настроек</span>
+            </label>
+            <input type="file" id="import-file" accept=".json" style="display: none;">
+            
+            <div id="import-preview" class="import-preview" style="display: none;">
+              <h4>Предпросмотр импорта:</h4>
+              <pre id="import-details"></pre>
+              <button id="import-confirm" class="btn btn-primary">✓ Подтвердить импорт</button>
+              <button id="import-cancel" class="btn btn-secondary">✕ Отмена</button>
             </div>
           </div>
         </div>
