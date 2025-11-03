@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FunPay Customizer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <h1>🎨 FunPay Customizer</h1>
+    </header>
+    
+    <main class="popup-content">
+      <section class="settings-section">
+        <h2>Быстрые настройки</h2>
+        
+        <div class="setting-group">
+          <label for="theme-select">Тема оформления:</label>
+          <select id="theme-select" class="setting-input">
+            <option value="default">По умолчанию</option>
+            <option value="dark">Тёмная</option>
+            <option value="light">Светлая</option>
+            <option value="blue">Синяя</option>
+            <option value="purple">Фиолетовая</option>
+            <option value="custom">Пользовательская</option>
+          </select>
+        </div>
+        
+        <div class="setting-group">
+          <label for="font-select">Шрифт:</label>
+          <select id="font-select" class="setting-input">
+            <option value="default">По умолчанию</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Open Sans">Open Sans</option>
+            <option value="Lato">Lato</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Raleway">Raleway</option>
+            <option value="PT Sans">PT Sans</option>
+            <option value="Ubuntu">Ubuntu</option>
+          </select>
+        </div>
+        
+        <div class="setting-group">
+          <label for="font-size">Размер шрифта: <span id="font-size-value">14</span>px</label>
+          <input type="range" id="font-size" class="setting-input" min="12" max="20" value="14" step="1">
+        </div>
+      </section>
+      
+      <section class="settings-section">
+        <h2>Обложка</h2>
+        
+        <div class="setting-group">
+          <label for="cover-upload" class="upload-btn">
+            📁 Загрузить изображение
+          </label>
+          <input type="file" id="cover-upload" accept="image/jpeg,image/png,image/gif" style="display: none;">
+        </div>
+        
+        <div id="cover-preview" class="cover-preview" style="display: none;">
+          <img id="cover-preview-img" src="" alt="Preview">
+          <button id="remove-cover" class="remove-btn">✕ Удалить</button>
+        </div>
+        
+        <div class="setting-group">
+          <label for="cover-position">Позиционирование:</label>
+          <select id="cover-position" class="setting-input">
+            <option value="center">По центру</option>
+            <option value="top">Сверху</option>
+            <option value="bottom">Снизу</option>
+            <option value="left">Слева</option>
+            <option value="right">Справа</option>
+          </select>
+        </div>
+        
+        <div class="setting-group">
+          <label for="cover-size">Масштабирование:</label>
+          <select id="cover-size" class="setting-input">
+            <option value="cover">Заполнить</option>
+            <option value="contain">Вместить</option>
+            <option value="auto">Оригинальный размер</option>
+          </select>
+        </div>
+      </section>
+      
+      <div class="button-group">
+        <button id="apply-btn" class="btn btn-primary">✓ Применить</button>
+        <button id="reset-btn" class="btn btn-secondary">⟲ Сбросить</button>
+        <button id="options-btn" class="btn btn-link">⚙ Расширенные настройки</button>
+      </div>
+    </main>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

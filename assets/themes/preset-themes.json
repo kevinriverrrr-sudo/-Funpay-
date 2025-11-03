@@ -1,0 +1,115 @@
+{
+  "themes": [
+    {
+      "id": "default",
+      "name": "По умолчанию",
+      "description": "Стандартная тема FunPay",
+      "colors": {}
+    },
+    {
+      "id": "dark",
+      "name": "Тёмная тема",
+      "description": "Темное оформление для комфортной работы",
+      "colors": {
+        "bgPrimary": "#1a1a1a",
+        "bgSecondary": "#2d2d2d",
+        "bgTertiary": "#3a3a3a",
+        "textPrimary": "#ffffff",
+        "textSecondary": "#b0b0b0",
+        "borderColor": "#404040",
+        "linkColor": "#5cb3ff",
+        "linkHover": "#7ec8ff"
+      }
+    },
+    {
+      "id": "light",
+      "name": "Светлая тема",
+      "description": "Чистая светлая тема",
+      "colors": {
+        "bgPrimary": "#ffffff",
+        "bgSecondary": "#f5f5f5",
+        "bgTertiary": "#e8e8e8",
+        "textPrimary": "#333333",
+        "textSecondary": "#666666",
+        "borderColor": "#d0d0d0",
+        "linkColor": "#0066cc",
+        "linkHover": "#0052a3"
+      }
+    },
+    {
+      "id": "blue",
+      "name": "Синяя тема",
+      "description": "Тема в синих тонах",
+      "colors": {
+        "bgPrimary": "#0a1929",
+        "bgSecondary": "#132f4c",
+        "bgTertiary": "#1e4976",
+        "textPrimary": "#e3f2fd",
+        "textSecondary": "#90caf9",
+        "borderColor": "#1e4976",
+        "linkColor": "#90caf9",
+        "linkHover": "#bbdefb"
+      }
+    },
+    {
+      "id": "purple",
+      "name": "Фиолетовая тема",
+      "description": "Тема в фиолетовых тонах",
+      "colors": {
+        "bgPrimary": "#1a0a29",
+        "bgSecondary": "#2d1b4c",
+        "bgTertiary": "#4a2976",
+        "textPrimary": "#f3e5fd",
+        "textSecondary": "#ce93d8",
+        "borderColor": "#4a2976",
+        "linkColor": "#ce93d8",
+        "linkHover": "#e1bee7"
+      }
+    },
+    {
+      "id": "green",
+      "name": "Зелёная тема",
+      "description": "Тема в зелёных тонах",
+      "colors": {
+        "bgPrimary": "#0a1f0a",
+        "bgSecondary": "#1b4c1b",
+        "bgTertiary": "#2d762d",
+        "textPrimary": "#e5fde5",
+        "textSecondary": "#93d893",
+        "borderColor": "#2d762d",
+        "linkColor": "#93d893",
+        "linkHover": "#bee7be"
+      }
+    },
+    {
+      "id": "red",
+      "name": "Красная тема",
+      "description": "Тема в красных тонах",
+      "colors": {
+        "bgPrimary": "#290a0a",
+        "bgSecondary": "#4c1b1b",
+        "bgTertiary": "#762d2d",
+        "textPrimary": "#fde5e5",
+        "textSecondary": "#d89393",
+        "borderColor": "#762d2d",
+        "linkColor": "#d89393",
+        "linkHover": "#e7bebe"
+      }
+    },
+    {
+      "id": "ocean",
+      "name": "Океан",
+      "description": "Морская тематика",
+      "colors": {
+        "bgPrimary": "#0a1f29",
+        "bgSecondary": "#1b3f4c",
+        "bgTertiary": "#2d6076",
+        "textPrimary": "#e5f5fd",
+        "textSecondary": "#93d5d8",
+        "borderColor": "#2d6076",
+        "linkColor": "#93d5d8",
+        "linkHover": "#bee5e7"
+      }
+    }
+  ]
+}

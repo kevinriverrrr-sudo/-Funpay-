@@ -1,0 +1,44 @@
+# OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Node modules (если будут использоваться)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build files
+dist/
+build/
+*.zip
+*.crx
+*.pem
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+.cache/
+
+# Browser specific
+.web-extension-id
+
+# Editor files
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+coverage/
+.nyc_output/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

@@ -1,0 +1,88 @@
+{
+  "fonts": [
+    {
+      "name": "Roboto",
+      "family": "Roboto",
+      "category": "sans-serif",
+      "description": "Современный геометрический шрифт от Google"
+    },
+    {
+      "name": "Open Sans",
+      "family": "Open Sans",
+      "category": "sans-serif",
+      "description": "Дружелюбный и открытый шрифт"
+    },
+    {
+      "name": "Lato",
+      "family": "Lato",
+      "category": "sans-serif",
+      "description": "Полукруглый шрифт с теплыми формами"
+    },
+    {
+      "name": "Montserrat",
+      "family": "Montserrat",
+      "category": "sans-serif",
+      "description": "Геометрический шрифт, вдохновленный Буэнос-Айресом"
+    },
+    {
+      "name": "Raleway",
+      "family": "Raleway",
+      "category": "sans-serif",
+      "description": "Элегантный шрифт с уникальным стилем"
+    },
+    {
+      "name": "PT Sans",
+      "family": "PT Sans",
+      "category": "sans-serif",
+      "description": "Универсальный российский шрифт"
+    },
+    {
+      "name": "PT Serif",
+      "family": "PT Serif",
+      "category": "serif",
+      "description": "Классический российский шрифт с засечками"
+    },
+    {
+      "name": "Ubuntu",
+      "family": "Ubuntu",
+      "category": "sans-serif",
+      "description": "Гуманистичный шрифт от Canonical"
+    },
+    {
+      "name": "Poppins",
+      "family": "Poppins",
+      "category": "sans-serif",
+      "description": "Геометрический шрифт с круглыми формами"
+    },
+    {
+      "name": "Nunito",
+      "family": "Nunito",
+      "category": "sans-serif",
+      "description": "Закругленный дружелюбный шрифт"
+    },
+    {
+      "name": "Merriweather",
+      "family": "Merriweather",
+      "category": "serif",
+      "description": "Удобочитаемый шрифт с засечками"
+    },
+    {
+      "name": "Source Sans Pro",
+      "family": "Source Sans Pro",
+      "category": "sans-serif",
+      "description": "Профессиональный шрифт от Adobe"
+    },
+    {
+      "name": "Oswald",
+      "family": "Oswald",
+      "category": "sans-serif",
+      "description": "Конденсированный шрифт для заголовков"
+    },
+    {
+      "name": "Inter",
+      "family": "Inter",
+      "category": "sans-serif",
+      "description": "Современный шрифт для интерфейсов"
+    }
+  ]
+}
