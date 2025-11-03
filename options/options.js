@@ -29,7 +29,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveAll = document.getElementById('save-all');
   const resetAll = document.getElementById('reset-all');
 
+  const highlightEnabled = document.getElementById('highlight-enabled');
+  const notificationsEnabled = document.getElementById('notifications-enabled');
+  const soundEnabled = document.getElementById('sound-enabled');
+  const keywordText = document.getElementById('keyword-text');
+  const keywordColor = document.getElementById('keyword-color');
+  const keywordPriority = document.getElementById('keyword-priority');
+  const keywordRegex = document.getElementById('keyword-regex');
+  const addKeyword = document.getElementById('add-keyword');
+  const keywordsList = document.getElementById('keywords-list');
+
   let currentSettings = {};
+  let keywords = [];
 
   await loadSettings();
 
@@ -129,6 +140,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     showNotification('✓ Пользовательская тема сохранена!');
   });
 
+  addKeyword.addEventListener('click', () => {
+    const text = keywordText.value.trim();
+    if (!text) {
+      showNotification('❌ Введите ключевое слово', 'error');
+      return;
+    }
+
+    if (keywordRegex.checked) {
+      try {
+        new RegExp(text);
+      } catch (e) {
+        showNotification('❌ Неверное регулярное выражение', 'error');
+        return;
+      }
+    }
+
+    const keyword = {
+      id: Date.now(),
+      text: text,
+      color: keywordColor.value,
+      priority: keywordPriority.value,
+      isRegex: keywordRegex.checked
+    };
+
+    keywords.push(keyword);
+    renderKeywords();
+    
+    keywordText.value = '';
+    keywordRegex.checked = false;
+    
+    showNotification('✓ Ключевое слово добавлено!');
+  });
+
+  keywordText.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      addKeyword.click();
+    }
+  });
+
   saveAll.addEventListener('click', async () => {
     const settings = {
       theme: currentSettings.theme,
@@ -137,7 +187,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: currentSettings.fontSize,
       coverImage: currentSettings.coverImage || null,
       coverPosition: currentSettings.coverPosition,
-      coverSize: currentSettings.coverSize
+      coverSize: currentSettings.coverSize,
+      chatTools: {
+        highlightEnabled: highlightEnabled.checked,
+        notificationsEnabled: notificationsEnabled.checked,
+        soundEnabled: soundEnabled.checked,
+        keywords: keywords
+      }
     };
 
     await chrome.storage.sync.set(settings);
@@ -159,7 +215,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         fontSize: '14',
         coverImage: null,
         coverPosition: 'center',
-        coverSize: 'cover'
+        coverSize: 'cover',
+        chatTools: {
+          highlightEnabled: true,
+          notificationsEnabled: true,
+          soundEnabled: false,
+          keywords: []
+        }
       };
 
       await chrome.storage.sync.set(defaultSettings);
@@ -182,10 +244,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      chatTools: {
+        highlightEnabled: true,
+        notificationsEnabled: true,
+        soundEnabled: false,
+        keywords: []
+      }
     });
 
     currentSettings = settings;
+    
+    if (settings.chatTools) {
+      highlightEnabled.checked = settings.chatTools.highlightEnabled;
+      notificationsEnabled.checked = settings.chatTools.notificationsEnabled;
+      soundEnabled.checked = settings.chatTools.soundEnabled;
+      keywords = settings.chatTools.keywords || [];
+      renderKeywords();
+    }
 
     themeCards.forEach(card => {
       if (card.dataset.theme === settings.theme) {
@@ -279,5 +355,55 @@ document.addEventListener('DOMContentLoaded', async () => {
     setTimeout(() => {
       notification.classList.remove('show');
     }, 3000);
+  }
+
+  function renderKeywords() {
+    keywordsList.innerHTML = '';
+    
+    keywords.forEach(keyword => {
+      const item = document.createElement('div');
+      item.className = 'keyword-item';
+      item.style.borderLeftColor = keyword.color;
+      
+      const info = document.createElement('div');
+      info.className = 'keyword-info';
+      
+      const text = document.createElement('span');
+      text.className = 'keyword-text';
+      text.textContent = keyword.text;
+      
+      const badge = document.createElement('span');
+      badge.className = `keyword-badge ${keyword.priority}`;
+      badge.textContent = keyword.priority;
+      
+      info.appendChild(text);
+      info.appendChild(badge);
+      
+      if (keyword.isRegex) {
+        const regexBadge = document.createElement('span');
+        regexBadge.className = 'keyword-regex-badge';
+        regexBadge.textContent = 'REGEX';
+        info.appendChild(regexBadge);
+      }
+      
+      const actions = document.createElement('div');
+      actions.className = 'keyword-actions';
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn-icon';
+      deleteBtn.textContent = '✕';
+      deleteBtn.title = 'Удалить';
+      deleteBtn.addEventListener('click', () => {
+        keywords = keywords.filter(k => k.id !== keyword.id);
+        renderKeywords();
+        showNotification('✓ Ключевое слово удалено');
+      });
+      
+      actions.appendChild(deleteBtn);
+      
+      item.appendChild(info);
+      item.appendChild(actions);
+      keywordsList.appendChild(item);
+    });
   }
 });

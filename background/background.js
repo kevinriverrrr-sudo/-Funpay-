@@ -9,7 +9,13 @@ chrome.runtime.onInstalled.addListener((details) => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      chatTools: {
+        highlightEnabled: true,
+        notificationsEnabled: true,
+        soundEnabled: false,
+        keywords: []
+      }
     });
     
     chrome.tabs.create({
@@ -32,5 +38,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     sendResponse({ success: true });
   }
+  
+  if (request.action === 'showNotification') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'assets/icons/icon128.png',
+      title: request.title || 'FunPay Customizer',
+      message: request.message || '',
+      priority: 2
+    });
+    sendResponse({ success: true });
+  }
+  
   return true;
 });
