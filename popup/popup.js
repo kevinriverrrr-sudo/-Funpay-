@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const applyBtn = document.getElementById('apply-btn');
   const resetBtn = document.getElementById('reset-btn');
   const optionsBtn = document.getElementById('options-btn');
+  const exportFormatSelect = document.getElementById('export-format');
+  const exportLotsBtn = document.getElementById('export-lots-btn');
 
   let currentSettings = {};
 
@@ -106,6 +108,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.runtime.openOptionsPage();
   });
 
+  exportFormatSelect.addEventListener('change', async (e) => {
+    await chrome.storage.sync.set({ exportFormat: e.target.value });
+  });
+
+  exportLotsBtn.addEventListener('click', async () => {
+    const format = exportFormatSelect.value;
+    await chrome.storage.sync.set({ exportFormat: format });
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+    if (!tab || !tab.url.includes('funpay.com')) {
+      showNotification('⚠ Откройте страницу FunPay с лотами');
+      return;
+    }
+
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        action: 'exportLots'
+      });
+
+      if (response && response.success) {
+        showNotification('✓ Экспорт начат!');
+      } else {
+        showNotification('✗ ' + (response?.error || 'Не удалось экспортировать'));
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      showNotification('✗ Ошибка: ' + error.message);
+    }
+  });
+
   async function loadSettings() {
     const settings = await chrome.storage.sync.get({
       theme: 'default',
@@ -114,7 +147,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      exportFormat: 'json'
     });
 
     currentSettings = settings;
@@ -125,6 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     fontSizeValue.textContent = settings.fontSize;
     coverPosition.value = settings.coverPosition;
     coverSize.value = settings.coverSize;
+    exportFormatSelect.value = settings.exportFormat;
 
     if (settings.coverImage) {
       coverPreviewImg.src = settings.coverImage;

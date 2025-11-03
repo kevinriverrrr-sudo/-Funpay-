@@ -8,8 +8,9 @@
 2. [Storage API](#storage-api)
 3. [Messaging API](#messaging-api)
 4. [Content Script API](#content-script-api)
-5. [Добавление новых тем](#добавление-новых-тем)
-6. [Добавление новых шрифтов](#добавление-новых-шрифтов)
+5. [Lots Export API](#lots-export-api)
+6. [Добавление новых тем](#добавление-новых-тем)
+7. [Добавление новых шрифтов](#добавление-новых-шрифтов)
 
 ---
 
@@ -27,7 +28,8 @@
   fontSize: string,           // Размер шрифта в px ('12'-'20')
   coverImage: string | null,  // base64 изображение или null
   coverPosition: string,      // CSS значение background-position
-  coverSize: string           // CSS значение background-size
+  coverSize: string,          // CSS значение background-size
+  exportFormat: string        // 'json' | 'txt' - формат экспорта лотов
 }
 ```
 
@@ -194,6 +196,229 @@ customizer.applySettings({
   coverImage: null,
   coverPosition: 'center',
   coverSize: 'cover'
+});
+```
+
+---
+
+## 📥 Lots Export API
+
+### LotsExporter Class
+
+Модуль для экспорта данных о лотах с FunPay:
+
+```javascript
+class LotsExporter {
+  constructor() {
+    this.isExporting = false;
+    this.exportFormat = 'json';
+    this.overlayButton = null;
+    this.progressOverlay = null;
+    this.init();
+  }
+
+  async startExport() {
+    // Начать процесс экспорта
+  }
+
+  async collectAllLots() {
+    // Собрать все видимые лоты
+  }
+
+  parseLots() {
+    // Парсить DOM и извлечь данные лотов
+  }
+
+  serializeData(lots, metadata) {
+    // Сериализовать в выбранный формат
+  }
+}
+```
+
+### Lot Data Structure
+
+Структура данных для одного лота:
+
+```javascript
+{
+  id: string,              // Уникальный ID лота
+  title: string,           // Название/описание лота
+  price: string,           // Цена (числовая строка)
+  currency: string,        // Валюта ('RUB', 'USD', 'EUR')
+  seller: string,          // Имя продавца
+  sellerStatus: string,    // 'online' | 'offline'
+  availability: string,    // 'available' | 'unavailable' | 'unknown'
+  timestamp: string,       // ISO timestamp или строка времени
+  url: string,             // Прямая ссылка на лот
+  index: number            // Порядковый номер
+}
+```
+
+### Export Metadata
+
+Метаданные, включаемые в экспорт:
+
+```javascript
+{
+  exportDate: string,        // ISO timestamp экспорта
+  exportTimestamp: number,   // Unix timestamp
+  url: string,               // URL страницы
+  pageTitle: string,         // Заголовок страницы
+  sectionName: string,       // Название раздела
+  account: string,           // Информация об аккаунте
+  totalLots: number,         // Количество лотов
+  format: string,            // 'json' | 'txt'
+  version: string            // Версия формата
+}
+```
+
+### Запуск экспорта программно
+
+```javascript
+// Получить экземпляр экспортёра
+const exporter = window.lotsExporter;
+
+// Запустить экспорт
+if (exporter && exporter.isLotsPage()) {
+  await exporter.startExport();
+}
+```
+
+### Экспорт через сообщения
+
+```javascript
+// Отправить сообщение для запуска экспорта
+chrome.tabs.sendMessage(tabId, {
+  action: 'exportLots'
+}, (response) => {
+  if (response.success) {
+    console.log('Export started');
+  } else {
+    console.error('Export failed:', response.error);
+  }
+});
+```
+
+### Форматы экспорта
+
+#### JSON Format
+
+```json
+{
+  "metadata": {
+    "exportDate": "2024-01-15T10:30:00.000Z",
+    "url": "https://funpay.com/chips/123/",
+    "sectionName": "Game Currency",
+    "totalLots": 50
+  },
+  "lots": [
+    {
+      "id": "12345",
+      "title": "1000 Gold Coins",
+      "price": "100.50",
+      "currency": "RUB",
+      "seller": "Username",
+      "sellerStatus": "online",
+      "availability": "available"
+    }
+  ]
+}
+```
+
+#### TXT Format
+
+```
+================================================================================
+FUNPAY LOTS EXPORT
+================================================================================
+Export Date: 15.01.2024, 10:30:00
+Section: Game Currency
+Total Lots: 50
+================================================================================
+
+Lot #1
+--------------------------------------------------------------------------------
+ID: 12345
+Title: 1000 Gold Coins
+Price: 100.50 RUB
+Seller: Username
+Status: online
+```
+
+### Настройка парсинга
+
+Для поддержки новых структур страниц:
+
+```javascript
+// В методе parseLots() добавить новые селекторы
+const selectors = [
+  '.offer-list-item',      // Существующий
+  '.tc-item',              // Существующий
+  '.my-custom-lot-class'   // Новый селектор
+];
+```
+
+### Обработка ошибок
+
+```javascript
+try {
+  await exporter.startExport();
+} catch (error) {
+  if (error.message.includes('не поддерживается')) {
+    console.error('Unsupported page structure');
+  } else if (error.message.includes('не найдены')) {
+    console.error('No lots found');
+  } else {
+    console.error('Export error:', error);
+  }
+}
+```
+
+### Кастомизация UI
+
+```javascript
+// Изменить позицию кнопки экспорта
+const button = document.getElementById('funpay-export-btn');
+if (button) {
+  button.style.bottom = '100px';
+  button.style.right = '30px';
+}
+```
+
+### Расширение функциональности
+
+Добавление нового формата экспорта:
+
+```javascript
+// В методе serializeData()
+if (this.exportFormat === 'csv') {
+  return this.serializeCSV(lots, metadata);
+}
+
+// Добавить новый метод
+serializeCSV(lots, metadata) {
+  let csv = 'ID,Title,Price,Currency,Seller,Status\n';
+  lots.forEach(lot => {
+    csv += `"${lot.id}","${lot.title}","${lot.price}","${lot.currency}","${lot.seller}","${lot.sellerStatus}"\n`;
+  });
+  return csv;
+}
+```
+
+### Downloads API
+
+Загрузка файлов через background service worker:
+
+```javascript
+// В background.js
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'downloadFile') {
+    chrome.downloads.download({
+      url: request.url,
+      filename: request.filename,
+      saveAs: false
+    });
+  }
 });
 ```
 

@@ -9,7 +9,8 @@ chrome.runtime.onInstalled.addListener((details) => {
       fontSize: '14',
       coverImage: null,
       coverPosition: 'center',
-      coverSize: 'cover'
+      coverSize: 'cover',
+      exportFormat: 'json'
     });
     
     chrome.tabs.create({
@@ -32,5 +33,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     sendResponse({ success: true });
   }
+  
+  if (request.action === 'downloadFile') {
+    chrome.downloads.download({
+      url: request.url,
+      filename: request.filename,
+      saveAs: false
+    }).then(() => {
+      sendResponse({ success: true });
+    }).catch(error => {
+      console.error('Download error:', error);
+      sendResponse({ success: false, error: error.message });
+    });
+    return true;
+  }
+  
   return true;
 });
