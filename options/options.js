@@ -29,9 +29,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveAll = document.getElementById('save-all');
   const resetAll = document.getElementById('reset-all');
 
+  const manualLiftAll = document.getElementById('manual-lift-all');
+  const manualActivateAll = document.getElementById('manual-activate-all');
+  const manualDeactivateAll = document.getElementById('manual-deactivate-all');
+  const lotActionResults = document.getElementById('lot-action-results');
+  const lotResultsContent = document.getElementById('lot-results-content');
+
+  const automationEnabled = document.getElementById('automation-enabled');
+  const notificationsEnabled = document.getElementById('notifications-enabled');
+  const scheduleFrequency = document.getElementById('schedule-frequency');
+  const datetimeRow = document.getElementById('datetime-row');
+  const createScheduleBtn = document.getElementById('create-schedule-btn');
+  const schedulesList = document.getElementById('schedules-list');
+
   let currentSettings = {};
 
   await loadSettings();
+  await loadAutomationSettings();
+  await loadSchedules();
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -263,6 +278,265 @@ document.addEventListener('DOMContentLoaded', async () => {
     previewLink.addEventListener('mouseleave', () => {
       previewLink.style.color = linkColor.value;
     });
+  }
+
+  manualLiftAll.addEventListener('click', async () => {
+    manualLiftAll.disabled = true;
+    manualLiftAll.textContent = '⏳ Выполняется...';
+    
+    const results = await chrome.runtime.sendMessage({
+      action: 'executeLotAction',
+      actionType: 'lift'
+    });
+    
+    displayResults(results);
+    manualLiftAll.disabled = false;
+    manualLiftAll.textContent = '⬆️ Поднять все лоты';
+  });
+
+  manualActivateAll.addEventListener('click', async () => {
+    manualActivateAll.disabled = true;
+    manualActivateAll.textContent = '⏳ Выполняется...';
+    
+    const results = await chrome.runtime.sendMessage({
+      action: 'executeLotAction',
+      actionType: 'toggle',
+      targetState: true
+    });
+    
+    displayResults(results);
+    manualActivateAll.disabled = false;
+    manualActivateAll.textContent = '✓ Активировать все лоты';
+  });
+
+  manualDeactivateAll.addEventListener('click', async () => {
+    manualDeactivateAll.disabled = true;
+    manualDeactivateAll.textContent = '⏳ Выполняется...';
+    
+    const results = await chrome.runtime.sendMessage({
+      action: 'executeLotAction',
+      actionType: 'toggle',
+      targetState: false
+    });
+    
+    displayResults(results);
+    manualDeactivateAll.disabled = false;
+    manualDeactivateAll.textContent = '✕ Деактивировать все лоты';
+  });
+
+  automationEnabled.addEventListener('change', async () => {
+    await chrome.storage.sync.set({ automationEnabled: automationEnabled.checked });
+    showNotification(automationEnabled.checked ? '✓ Автоматизация включена' : '⏸ Автоматизация приостановлена');
+  });
+
+  notificationsEnabled.addEventListener('change', async () => {
+    await chrome.storage.sync.set({ notificationsEnabled: notificationsEnabled.checked });
+    showNotification(notificationsEnabled.checked ? '✓ Уведомления включены' : '🔕 Уведомления отключены');
+  });
+
+  scheduleFrequency.addEventListener('change', () => {
+    if (scheduleFrequency.value === 'once') {
+      datetimeRow.style.display = 'block';
+    } else {
+      datetimeRow.style.display = 'none';
+    }
+  });
+
+  createScheduleBtn.addEventListener('click', async () => {
+    const scheduleName = document.getElementById('schedule-name').value.trim();
+    const scheduleAction = document.getElementById('schedule-action').value;
+    const frequency = scheduleFrequency.value;
+    const datetime = document.getElementById('schedule-datetime').value;
+
+    if (!scheduleName) {
+      showNotification('⚠️ Введите название расписания', 'error');
+      return;
+    }
+
+    if (frequency === 'once' && !datetime) {
+      showNotification('⚠️ Укажите дату и время выполнения', 'error');
+      return;
+    }
+
+    const schedule = {
+      name: scheduleName,
+      actionType: scheduleAction.startsWith('toggle') ? 'toggle' : scheduleAction,
+      targetState: scheduleAction === 'toggle-activate' ? true : (scheduleAction === 'toggle-deactivate' ? false : null),
+      frequency: frequency,
+      datetime: datetime || null
+    };
+
+    const response = await chrome.runtime.sendMessage({
+      action: 'createSchedule',
+      schedule: schedule
+    });
+
+    if (response.success) {
+      showNotification('✓ Расписание создано успешно!');
+      document.getElementById('schedule-name').value = '';
+      document.getElementById('schedule-datetime').value = '';
+      await loadSchedules();
+    } else {
+      showNotification('❌ Ошибка создания расписания', 'error');
+    }
+  });
+
+  async function loadAutomationSettings() {
+    const settings = await chrome.storage.sync.get({
+      automationEnabled: true,
+      notificationsEnabled: true
+    });
+
+    automationEnabled.checked = settings.automationEnabled;
+    notificationsEnabled.checked = settings.notificationsEnabled;
+  }
+
+  async function loadSchedules() {
+    const data = await chrome.storage.sync.get('automationSchedules');
+    const schedules = data.automationSchedules || [];
+
+    if (schedules.length === 0) {
+      schedulesList.innerHTML = '<p class="empty-state">Нет активных расписаний. Создайте новое выше.</p>';
+      return;
+    }
+
+    schedulesList.innerHTML = '';
+    schedules.forEach(schedule => {
+      const scheduleItem = createScheduleItem(schedule);
+      schedulesList.appendChild(scheduleItem);
+    });
+  }
+
+  function createScheduleItem(schedule) {
+    const div = document.createElement('div');
+    div.className = `schedule-item ${schedule.paused ? 'paused' : ''}`;
+    
+    const actionText = schedule.actionType === 'lift' ? 'Поднятие' : (schedule.targetState ? 'Активация' : 'Деактивация');
+    const frequencyText = getFrequencyText(schedule.frequency);
+    
+    let nextExecution = '';
+    if (!schedule.paused) {
+      nextExecution = `<div class="next-execution">⏰ Следующее выполнение: ${getNextExecutionTime(schedule)}</div>`;
+    }
+
+    div.innerHTML = `
+      <div class="schedule-header">
+        <h4 class="schedule-title">${schedule.name}</h4>
+        <div>
+          <span class="schedule-badge ${schedule.actionType}">${actionText}</span>
+          ${schedule.paused ? '<span class="schedule-badge paused">Приостановлено</span>' : ''}
+        </div>
+      </div>
+      <div class="schedule-details">
+        <div class="schedule-detail">
+          <strong>Частота:</strong> ${frequencyText}
+        </div>
+        <div class="schedule-detail">
+          <strong>Создано:</strong> ${new Date(schedule.created).toLocaleString('ru-RU')}
+        </div>
+        ${schedule.lastExecution ? `
+          <div class="schedule-detail">
+            <strong>Последнее выполнение:</strong> ${new Date(schedule.lastExecution).toLocaleString('ru-RU')}
+          </div>
+        ` : ''}
+        ${schedule.executionCount ? `
+          <div class="schedule-detail">
+            <strong>Выполнено раз:</strong> ${schedule.executionCount}
+          </div>
+        ` : ''}
+      </div>
+      ${nextExecution}
+      <div class="schedule-actions">
+        <button class="btn ${schedule.paused ? 'btn-success' : 'btn-warning'} toggle-schedule-btn" data-id="${schedule.id}" data-paused="${schedule.paused}">
+          ${schedule.paused ? '▶️ Возобновить' : '⏸ Приостановить'}
+        </button>
+        <button class="btn btn-danger delete-schedule-btn" data-id="${schedule.id}">
+          🗑️ Удалить
+        </button>
+      </div>
+    `;
+
+    const toggleBtn = div.querySelector('.toggle-schedule-btn');
+    const deleteBtn = div.querySelector('.delete-schedule-btn');
+
+    toggleBtn.addEventListener('click', async () => {
+      const isPaused = toggleBtn.dataset.paused === 'true';
+      await chrome.runtime.sendMessage({
+        action: 'pauseSchedule',
+        scheduleId: schedule.id,
+        paused: !isPaused
+      });
+      await loadSchedules();
+      showNotification(isPaused ? '▶️ Расписание возобновлено' : '⏸ Расписание приостановлено');
+    });
+
+    deleteBtn.addEventListener('click', async () => {
+      if (confirm(`Удалить расписание "${schedule.name}"?`)) {
+        await chrome.runtime.sendMessage({
+          action: 'deleteSchedule',
+          scheduleId: schedule.id
+        });
+        await loadSchedules();
+        showNotification('🗑️ Расписание удалено');
+      }
+    });
+
+    return div;
+  }
+
+  function getFrequencyText(frequency) {
+    const texts = {
+      'once': 'Один раз',
+      '15min': 'Каждые 15 минут',
+      '30min': 'Каждые 30 минут',
+      '1hour': 'Каждый час',
+      '2hours': 'Каждые 2 часа',
+      '4hours': 'Каждые 4 часа',
+      '6hours': 'Каждые 6 часов',
+      '12hours': 'Каждые 12 часов',
+      '24hours': 'Каждые 24 часа'
+    };
+    return texts[frequency] || frequency;
+  }
+
+  function getNextExecutionTime(schedule) {
+    if (schedule.frequency === 'once' && schedule.datetime) {
+      return new Date(schedule.datetime).toLocaleString('ru-RU');
+    }
+    
+    const now = new Date();
+    const lastExec = schedule.lastExecution ? new Date(schedule.lastExecution) : now;
+    const intervals = {
+      '15min': 15, '30min': 30, '1hour': 60, '2hours': 120,
+      '4hours': 240, '6hours': 360, '12hours': 720, '24hours': 1440
+    };
+    
+    const minutes = intervals[schedule.frequency] || 60;
+    const nextTime = new Date(lastExec.getTime() + minutes * 60000);
+    return nextTime.toLocaleString('ru-RU');
+  }
+
+  function displayResults(results) {
+    lotActionResults.style.display = 'block';
+    
+    let html = `
+      <p><strong>Всего лотов:</strong> ${results.total}</p>
+      <p class="success"><strong>Успешно:</strong> ${results.successful}</p>
+      <p class="error"><strong>Ошибок:</strong> ${results.failed}</p>
+    `;
+    
+    if (results.errors && results.errors.length > 0) {
+      html += '<p><strong>Детали ошибок:</strong></p><ul>';
+      results.errors.slice(0, 5).forEach(error => {
+        html += `<li class="error">${error}</li>`;
+      });
+      if (results.errors.length > 5) {
+        html += `<li class="error">... и ещё ${results.errors.length - 5} ошибок</li>`;
+      }
+      html += '</ul>';
+    }
+    
+    lotResultsContent.innerHTML = html;
   }
 
   function showNotification(message, type = 'success') {
