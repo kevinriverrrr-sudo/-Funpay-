@@ -1,12 +1,17 @@
 {
   "manifest_version": 3,
   "name": "FunPay Customizer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Расширение для кастомизации внешнего вида сайта FunPay.com",
   "author": "@MarkusGarantor",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "tabs",
+    "alarms",
+    "notifications",
+    "contextMenus",
+    "scripting"
   ],
   "host_permissions": [
     "https://funpay.com/*",
@@ -28,7 +33,7 @@
     "128": "assets/icons/icon128.png"
   },
   "background": {
-    "service_worker": "background/background.js"
+    "service_worker": "background/index.js"
   },
   "content_scripts": [
     {
@@ -36,7 +41,11 @@
         "https://funpay.com/*",
         "https://*.funpay.com/*"
       ],
-      "js": ["content/content.js"],
+      "js": [
+        "shared/constants.js",
+        "shared/messaging.js",
+        "content/content-new.js"
+      ],
       "css": ["content/inject.css"],
       "run_at": "document_start"
     }

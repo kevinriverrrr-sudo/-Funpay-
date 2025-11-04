@@ -80,14 +80,101 @@
 - Некоторые элементы сайта могут не поддерживать кастомизацию
 - В Firefox могут быть небольшие отличия в работе из-за Manifest V3
 
+## [1.1.0] - 2024-11-04
+
+### Добавлено
+
+#### Модульная архитектура MV3
+- Реструктуризация background service worker в модульную систему
+  - `background/index.js` - главный файл с importScripts
+  - `background/modules/install.js` - обработка установки/обновления
+  - `background/modules/messaging.js` - обработчики сообщений
+  - `background/modules/storage.js` - слушатели изменений storage
+  - `background/modules/migrations.js` - система миграций
+
+#### Shared утилиты
+- Создана папка `shared/` с переиспользуемыми модулями:
+  - `constants.js` - константы (MESSAGE_TYPES, STORAGE_KEYS, DEFAULT_SETTINGS)
+  - `storage.js` - StorageManager для управления chrome.storage
+  - `messaging.js` - MessageBus для унифицированного обмена сообщениями
+  - `dom.js` - DOMHelpers для работы с DOM в content scripts
+
+#### Versioned Storage Schema v1
+- Система версионирования схемы хранилища
+- Раздельное хранение: chrome.storage.sync (синхронизируемые) и chrome.storage.local (локальные)
+- Автоматические миграции при обновлении расширения
+- Новые поля для будущей функциональности:
+  - analyticsEnabled, analyticsTrackingId
+  - lotToolsEnabled, templatesEnabled, templates
+  - automationEnabled, automationSchedules
+  - accountProfiles, activeProfile
+  - visualToggles
+
+#### Message Bus
+- Унифицированная система обмена сообщениями
+- 13 типов сообщений для различных операций
+- Поддержка async/await и Promise
+- Автоматическая обработка ошибок
+- Методы: sendToBackground, sendToTab, broadcast
+
+#### Расширенные разрешения manifest.json
+- `tabs` - доступ к информации о вкладках
+- `alarms` - планирование задач
+- `notifications` - системные уведомления (будущая функциональность)
+- `contextMenus` - контекстные меню (будущая функциональность)
+- `scripting` - динамическое внедрение скриптов (будущая функциональность)
+
+#### API для работы с профилями
+- CREATE_PROFILE - создание профиля настроек
+- SWITCH_PROFILE - переключение между профилями
+- DELETE_PROFILE - удаление профиля
+
+#### API для работы с шаблонами
+- SAVE_TEMPLATE - сохранение шаблона
+- DELETE_TEMPLATE - удаление шаблона
+
+#### API для автоматизации
+- SCHEDULE_AUTOMATION - планирование автоматических действий
+- CANCEL_AUTOMATION - отмена запланированных действий
+- Интеграция с chrome.alarms API
+
+#### Документация
+- Полностью обновлен API.md с описанием новой архитектуры
+- Добавлены разделы о StorageManager, MessageBus, DOMHelpers
+- Документация по миграциям и версионированию
+- Обоснование (rationale) для всех разрешений манифеста
+- Обновлен README.md с описанием модульной структуры
+
+#### Тестирование
+- Создан test-integration.html для проверки core utilities
+- Тесты для StorageManager, MessageBus, DOMHelpers, constants
+
+### Изменено
+
+- Background service worker переработан в модульную архитектуру
+- Content script обновлен для использования MessageBus (`content-new.js`)
+- Popup обновлен для использования StorageManager и MessageBus (`popup-new.js`)
+- Options page обновлен для загрузки shared scripts
+- Структура проекта реорганизована для лучшей поддерживаемости
+
+### Техническая информация
+
+- Миграция с монолитного background.js на модульную структуру
+- Разделение sync и local storage для оптимизации
+- Версионирование схемы хранилища начинается с v1
+- Обратная совместимость через миграцию 0->1
+- Все компоненты используют единые константы и утилиты
+
 ## [Unreleased]
 
 ### Планируется в будущих версиях
-- Экспорт и импорт настроек
-- Синхронизация настроек между устройствами
+- Реализация функциональности профилей аккаунтов
+- Реализация системы шаблонов
+- Реализация автоматизации по расписанию
+- Системные уведомления
+- Контекстное меню для быстрого доступа
 - Больше предустановленных тем
 - Автоматическая смена темы (день/ночь)
 - Поддержка локальных шрифтов
 - Расширенная настройка отдельных элементов
 - Горячие клавиши для быстрого переключения тем
-- Профили настроек
